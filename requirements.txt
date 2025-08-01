@@ -1,0 +1,75 @@
+# ===== PIPELINE DE GENERACIÓN DE VIDEOS - DEPENDENCIAS UNIFICADAS =====
+# Archivo creado fusionando todos los requirements.txt de las etapas 2-7
+
+# ===== CORE AI/ML DEPENDENCIES =====
+# OpenAI Whisper para transcripciones y subtítulos (Etapas 2 y 4)
+openai-whisper>=20231117
+torch>=2.0.0
+torchaudio>=2.0.0
+
+# Pydantic AI para generación de prompts (Etapa 6)
+pydantic-ai>=0.0.5
+pydantic>=2.5.0
+
+# FAL.AI para generación de videos (Etapa 7)
+fal-client>=0.4.0
+
+# ===== VIDEO/AUDIO PROCESSING =====
+# MoviePy para procesamiento de video (Etapa 3)
+moviepy==1.0.3
+imageio==2.34.0
+imageio-ffmpeg==0.4.9
+ffmpeg-python>=0.2.0
+
+# Audio processing
+pydub>=0.25.1
+
+# Computer vision (opcional, mejora rendimiento)
+opencv-python>=4.5.0
+
+# Progress bars
+tqdm>=4.64.0
+
+# ===== UTILITY LIBRARIES =====
+# Manejo de archivos y configuración
+pathlib2>=2.3.7
+python-dotenv>=1.0.0
+requests>=2.28.0
+
+# Procesamiento numérico y científico
+numpy>=1.21.0
+scipy>=1.7.0
+more-itertools>=8.0.0
+decorator>=4.4.2
+
+# Text processing para sincronización (Etapa 5)
+fuzzywuzzy>=0.18.0
+python-Levenshtein>=0.12.0
+
+# Text formatting para subtítulos (Etapa 4)
+textwrap3>=0.9.2
+
+# Typing y compatibilidad
+typing-extensions>=4.8.0
+
+# ===== DEVELOPMENT TOOLS (OPTIONAL) =====
+# Formateo y linting de código
+black>=23.0.0
+flake8>=6.0.0
+
+# ===== ETAPA 1 DEPENDENCIES (SI SE NECESITAN) =====
+# Nota: La etapa 1 mantiene su propio entorno, pero si se quiere unificar:
+# pydantic-ai>=0.0.5  # Ya incluido arriba
+# python-dotenv>=1.0.0  # Ya incluido arriba
+
+# ===== NOTAS DE INSTALACIÓN =====
+# Para instalar todas las dependencias:
+# pip install -r requirements.txt
+#
+# Para instalación con GPU (recomendado para Whisper):
+# pip install torch torchaudio --index-url https://download.pytorch.org/whl/cu118
+# pip install -r requirements.txt
+#
+# Dependencias del sistema requeridas:
+# - FFmpeg (para procesamiento de audio/video)
+# - CUDA toolkit (opcional, para aceleración GPU)

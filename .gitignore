@@ -1,0 +1,328 @@
+# ========================================
+# 🎬 VIDEO PRODUCTION PIPELINE - .gitignore
+# ========================================
+
+# ===== 🔑 ARCHIVOS SENSIBLES Y CONFIGURACIÓN =====
+# API Keys y configuración sensible
+
+remotion_edit_video/
+
+.env
+.env.local
+.env.production
+.env.staging
+config_local.py
+secrets.json
+api_keys.txt
+fal_api_key.txt
+
+# Configuraciones personales
+config_personal.py
+user_config.py
+local_settings.py
+
+# ===== 📁 CARPETA PRINCIPAL DE PRODUCCIÓN =====
+# Toda la carpeta VideoProduction/ con outputs del pipeline
+VideoProduction/
+# Si necesitas mantener la estructura, descomenta las siguientes líneas:
+# VideoProduction/**/*
+# !VideoProduction/**/
+# !VideoProduction/**/.gitkeep
+
+# ===== 🎥 ARCHIVOS DE MEDIA PESADOS =====
+# Videos
+*.mp4
+*.avi
+*.mov
+*.mkv
+*.wmv
+*.flv
+*.webm
+*.m4v
+
+# Audio
+*.wav
+*.mp3
+*.aac
+*.flac
+*.ogg
+*.m4a
+*.wma
+
+# Imágenes pesadas
+*.tiff
+*.tif
+*.bmp
+*.psd
+*.ai
+*.eps
+
+# ===== 📄 ARCHIVOS DE TRANSCRIPCIÓN Y SUBTÍTULOS =====
+# Transcripciones generadas
+*.srt
+*.vtt
+*.ass
+*.ssa
+transcriptions/
+Subtitles/
+
+# ===== 📊 OUTPUT FILES Y DATOS GENERADOS =====
+# JSONs de output (mantener solo los de configuración)
+*_output.json
+*_result.json
+*_generated.json
+*_metadata.json
+generated_*.json
+segmented_prompts.json
+synchronized_*.json
+scripts_with_video_prompts.json
+
+# Carpetas de output del pipeline anterior (por si existen)
+Video_generated/
+Video_without_silences/
+synchronized/
+synchronized_part2/
+Record/
+Results/
+Material/
+
+# ===== 🐍 PYTHON =====
+# Byte-compiled / optimized / DLL files
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# Distribution / packaging
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+pip-wheel-metadata/
+share/python-wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+MANIFEST
+
+# PyInstaller
+*.manifest
+*.spec
+
+# Installer logs
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Unit test / coverage reports
+htmlcov/
+.tox/
+.nox/
+.coverage
+.coverage.*
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+*.py,cover
+.hypothesis/
+.pytest_cache/
+
+# Virtual environments
+venv/
+env/
+ENV/
+env.bak/
+venv.bak/
+.venv/
+video_env/
+pipeline_env/
+
+# ===== 🤖 AI/ML MODELS =====
+# Modelos descargados de Whisper
+*.pt
+*.pth
+*.bin
+*.safetensors
+models/
+whisper_models/
+huggingface_models/
+
+# Cache de modelos
+.cache/
+*.cache
+model_cache/
+
+# ===== 📝 LOGS Y TEMPORALES =====
+# Logs
+*.log
+logs/
+*.out
+*.err
+debug.txt
+error.log
+pipeline.log
+
+# Archivos temporales
+temp/
+tmp/
+*.tmp
+*.temp
+*.swp
+*.swo
+*~
+
+# ===== 💻 SISTEMAS OPERATIVOS =====
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+*.cab
+*.msi
+*.msix
+*.msm
+*.msp
+*.lnk
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+Icon
+._*
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Linux
+*~
+.fuse_hidden*
+.directory
+.Trash-*
+.nfs*
+
+# ===== 🛠️ IDEs Y EDITORES =====
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# Jupyter Notebook
+.ipynb_checkpoints
+*.ipynb
+
+# Spyder
+.spyderproject
+.spyproject
+
+# Vim
+*.swp
+*.swo
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# ===== 🌐 WEB Y NODE (si usas alguna herramienta web) =====
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.npm
+.node_repl_history
+
+# ===== 📦 DEPENDENCIAS Y INSTALACIONES =====
+# pip
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Conda
+.conda/
+
+# ===== 🔍 HERRAMIENTAS DE DESARROLLO =====
+# mypy
+.mypy_cache/
+.dmypy.json
+dmypy.json
+
+# Pyre type checker
+.pyre/
+
+# pytype static type analyzer
+.pytype/
+
+# profiling data
+.prof
+
+# ===== 📋 ARCHIVOS DE PROYECTO ESPECÍFICOS =====
+# Scripts HTML del narrador (pueden ser regenerados)
+scripts/*.html
+narrator_*.html
+
+# Archivos de backup
+*.bak
+*.backup
+backup/
+
+# Archivos de test pesados
+test_videos/
+sample_videos/
+test_data/
+
+# ===== ✅ EXCEPCIONES - ARCHIVOS A MANTENER =====
+# Mantener archivos de configuración base
+!config.py
+!requirements.txt
+!README.md
+
+# Mantener estructura de carpetas (si es necesario)
+# !VideoProduction/**/.gitkeep
+
+# Mantener archivos de configuración JSON pequeños
+!**/category_prompts.json
+!**/topics.json
+!1_generate_content_scripts/json/**/*.json
+
+# ===== 📝 DOCUMENTACIÓN =====
+# Mantener documentación
+!*.md
+!docs/
+!LICENSE
+!CHANGELOG.md
+
+# ========================================
+# 🎯 RESUMEN DE ARCHIVOS EXCLUIDOS:
+# ========================================
+# ✅ Videos/audio pesados (*.mp4, *.wav, etc.)
+# ✅ Toda la carpeta VideoProduction/ con outputs
+# ✅ API keys y configuración sensible
+# ✅ Modelos de AI descargados
+# ✅ Cache de Python y virtual environments
+# ✅ Logs y archivos temporales
+# ✅ Archivos del sistema operativo
+# ✅ Configuraciones de IDEs
+# ✅ Archivos generados por el pipeline
+# ========================================

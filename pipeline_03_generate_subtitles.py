@@ -20,17 +20,17 @@ def find_video_file(video_path):
     """
     # Convertir ruta absoluta a relativa si es necesario
     if not os.path.exists(video_path):
-        print(f"❌ Error: La ruta {video_path} no existe")
+        print(f"[ERROR] Error: La ruta {video_path} no existe")
         return None
     
     # Buscar archivos MP4
     mp4_files = glob.glob(os.path.join(video_path, "*.mp4"))
     
     if len(mp4_files) == 0:
-        print(f"❌ Error: No se encontraron archivos MP4 en {video_path}")
+        print(f"[ERROR] Error: No se encontraron archivos MP4 en {video_path}")
         return None
     elif len(mp4_files) > 1:
-        print(f"❌ Error: Se encontraron {len(mp4_files)} archivos MP4 en {video_path}")
+        print(f"[ERROR] Error: Se encontraron {len(mp4_files)} archivos MP4 en {video_path}")
         print("Solo debe haber exactamente 1 archivo MP4.")
         print("Archivos encontrados:")
         for file in mp4_files:
@@ -38,39 +38,39 @@ def find_video_file(video_path):
         return None
     
     video_file = mp4_files[0]
-    print(f"✅ Archivo de video encontrado: {os.path.basename(video_file)}")
+    print(f"[OK] Archivo de video encontrado: {os.path.basename(video_file)}")
     return video_file
 
 def load_whisper_model(model_size=SubtitlesConfig.WHISPER_MODEL):
     """
     Carga el modelo Whisper
     """
-    print(f"🔄 Cargando modelo Whisper '{model_size}'...")
+    print(f">> Cargando modelo Whisper '{model_size}'...")
     try:
         model = whisper.load_model(model_size)
-        print("✅ Modelo cargado exitosamente")
+        print("[OK] Modelo cargado exitosamente")
         return model
     except Exception as e:
-        print(f"❌ Error cargando modelo: {str(e)}")
-        print(f"💡 Intentando con modelo '{SubtitlesConfig.FALLBACK_MODEL}' como respaldo...")
+        print(f"[ERROR] Error cargando modelo: {str(e)}")
+        print(f">> Intentando con modelo '{SubtitlesConfig.FALLBACK_MODEL}' como respaldo...")
         try:
             model = whisper.load_model(SubtitlesConfig.FALLBACK_MODEL)
-            print(f"✅ Modelo {SubtitlesConfig.FALLBACK_MODEL} cargado exitosamente")
+            print(f"[OK] Modelo {SubtitlesConfig.FALLBACK_MODEL} cargado exitosamente")
             return model
         except Exception as e2:
-            print(f"❌ Error cargando modelo {SubtitlesConfig.FALLBACK_MODEL}: {str(e2)}")
+            print(f"[ERROR] Error cargando modelo {SubtitlesConfig.FALLBACK_MODEL}: {str(e2)}")
             return None
 
 def generate_transcription(model, video_file):
     """
     Genera la transcripción usando Whisper
     """
-    print("🔄 Generando transcripción para subtítulos...")
-    print("⏳ Esto puede tomar varios minutos dependiendo del tamaño del video...")
+    print(">> Generando transcripción para subtítulos...")
+    print(">> Esto puede tomar varios minutos dependiendo del tamaño del video...")
     
     # Mostrar configuración actual
     if SubtitlesConfig.VERBOSE:
-        print(f"⚙️  Configuración: Modelo={SubtitlesConfig.WHISPER_MODEL}, Idioma={SubtitlesConfig.LANGUAGE}, Temp={SubtitlesConfig.TEMPERATURE}")
+        print(f">> Configuración: Modelo={SubtitlesConfig.WHISPER_MODEL}, Idioma={SubtitlesConfig.LANGUAGE}, Temp={SubtitlesConfig.TEMPERATURE}")
     
     try:
         # Transcribir con configuración desde config.py
@@ -86,10 +86,10 @@ def generate_transcription(model, video_file):
         
         result = model.transcribe(video_file, **transcribe_options)
         
-        print("✅ Transcripción completada exitosamente")
+        print("[OK] Transcripción completada exitosamente")
         return result
     except Exception as e:
-        print(f"❌ Error durante la transcripción: {str(e)}")
+        print(f"[ERROR] Error durante la transcripción: {str(e)}")
         return None
 
 def split_text_for_subtitles(text, max_chars=SubtitlesConfig.MAX_CHARS_PER_LINE):
@@ -190,30 +190,30 @@ def save_subtitles_srt(result, video_file, output_dir):
                 f.write(f"{line}\n")
             f.write("\n")  # Línea en blanco entre subtítulos
     
-    print(f"🎬 Subtítulos SRT guardados: {srt_file}")
-    print(f"📊 Total de subtítulos generados: {subtitle_count}")
+    print(f">> Subtítulos SRT guardados: {srt_file}")
+    print(f">> Total de subtítulos generados: {subtitle_count}")
     
     # Calcular estadísticas
     total_duration = max([seg['end'] for seg in optimized_segments]) if optimized_segments else 0
     avg_duration = sum([seg['end'] - seg['start'] for seg in optimized_segments]) / len(optimized_segments) if optimized_segments else 0
     
     if SubtitlesConfig.VERBOSE:
-        print(f"📏 Duración total del video: {total_duration:.2f} segundos")
-        print(f"⏱️  Duración promedio por subtítulo: {avg_duration:.2f} segundos")
+        print(f">> Duración total del video: {total_duration:.2f} segundos")
+        print(f">> Duración promedio por subtítulo: {avg_duration:.2f} segundos")
     
     return srt_file
 
 def main():
-    print("🎬 GENERADOR DE SUBTÍTULOS SRT DE ALTA CALIDAD")
+    print(">> GENERADOR DE SUBTÍTULOS SRT DE ALTA CALIDAD")
     print("=" * 55)
     
     # Validar configuración
     config_errors = validate_all_paths()
     if config_errors:
-        print("❌ ERRORES DE CONFIGURACIÓN:")
+        print("[ERROR] ERRORES DE CONFIGURACIÓN:")
         for error in config_errors:
             print(f"  - {error}")
-        print("🔧 Revisa el archivo config.py")
+        print(">> Revisa el archivo config.py")
         sys.exit(1)
     
     # Mostrar configuración si está habilitado
@@ -228,9 +228,9 @@ def main():
     # Paso 1: Buscar archivo de video
     video_file_path = video_input_path / "video_no_silence.mp4"
     if not video_file_path.exists():
-        print(f"❌ Error: No se encontró el archivo de video: {video_file_path}")
+        print(f"[ERROR] Error: No se encontró el archivo de video: {video_file_path}")
         sys.exit(1)
-    print(f"✅ Archivo de video encontrado: {video_file_path}")
+    print(f"[OK] Archivo de video encontrado: {video_file_path}")
     video_file = str(video_file_path)
     
     # Paso 2: Cargar modelo Whisper
@@ -247,18 +247,18 @@ def main():
     srt_file = save_subtitles_srt(result, video_file, output_dir)
     
     print("\n" + "=" * 55)
-    print("🎉 GENERACIÓN DE SUBTÍTULOS COMPLETADA EXITOSAMENTE")
+    print("[OK] GENERACIÓN DE SUBTÍTULOS COMPLETADA EXITOSAMENTE")
     print("=" * 55)
-    print(f"📁 Archivo guardado en: {os.path.dirname(srt_file)}/")
-    print(f"🎬 Archivo SRT: {os.path.basename(srt_file)}")
+    print(f">> Archivo guardado en: {os.path.dirname(srt_file)}/")
+    print(f">> Archivo SRT: {os.path.basename(srt_file)}")
     
     # Mostrar preview del texto
     preview = result['text'][:200] + "..." if len(result['text']) > 200 else result['text']
-    print(f"\n📝 Preview del contenido:")
+    print(f"\n>> Preview del contenido:")
     print(f'"{preview}"')
     
-    print(f"\n💡 El archivo SRT está listo para usar con reproductores de video")
-    print(f"📍 Ubicación: {srt_file}")
+    print(f"\n>> El archivo SRT está listo para usar con reproductores de video")
+    print(f">> Ubicación: {srt_file}")
 
 if __name__ == "__main__":
     main()

@@ -1,7 +1,15 @@
+#!/usr/bin/env python3
+"""
+Script unificado para generación de videos con IA
+Combina toda la funcionalidad de generación de videos en un solo archivo
+"""
+
 import os
 import math
 import json
 import requests
+import sys
+import argparse
 from pathlib import Path
 import fal_client
 from typing import Optional, Dict, List
@@ -257,8 +265,6 @@ def calculate_frames_for_duration(duration_seconds: float, target_fps: int = 30)
     # Asegurar que esté dentro del rango permitido (81-121)
     frames = max(81, min(121, calculated_frames))
     
-    print(f"   📊 Duración: {duration_seconds:.1f}s | FPS: {target_fps} | Frames calculados: {calculated_frames} | Frames finales: {frames}")
-    
     return frames
 
 # Función para generar video con soporte completo para Wan 2.2 usando schema actualizado
@@ -283,28 +289,17 @@ def generate_video(
         if duration < 2 or duration > 15:
             raise ValueError("Wan 2.2: La duración debe estar entre 2 y 15 segundos")
     
-    print(f"🚀 Iniciando generación de video...")
-    print(f"📝 Prompt: {prompt}")
-    print(f"⏱️ Duración: {duration}s")
-    print(f"🎬 Modelo: {model}")
+    print(f"    Generando video ({duration}s)...", end=" ")
     
     def on_queue_update(update):
-        if isinstance(update, fal_client.InProgress):
-            print(f"⏳ En progreso...")
-            for log in update.logs:
-                print(f"📋 {log['message']}")
-        elif isinstance(update, fal_client.Queued):
-            print(f"🔄 En cola, posición: {getattr(update, 'position', 'N/A')}")
-        else:
-            print(f"📡 Estado: {type(update).__name__}")
+        # Callback silencioso - solo procesamiento interno
+        pass
     
     # Determinar el endpoint
     if image_url:
         endpoint = VIDEO_MODELS.get(f"{model}_i2v", VIDEO_MODELS.get("seedance_i2v"))
     else:
         endpoint = VIDEO_MODELS.get(model, VIDEO_MODELS.get("seedance"))
-    
-    print(f"🎯 Endpoint: {endpoint}")
     
     # Preparar argumentos base
     arguments = {}
@@ -334,10 +329,6 @@ def generate_video(
             "num_interpolated_frames": 0,
             "adjust_fps_for_interpolation": True
         })
-        
-        # Remove the original prompt from arguments since it's now included above
-        if "prompt" in arguments and arguments["prompt"] == prompt:
-            pass  # Already set correctly
             
     elif model.startswith("seedance"):
         arguments.update({
@@ -354,7 +345,6 @@ def generate_video(
         arguments["image"] = image_url
     
     try:
-        print("📤 Enviando solicitud...")
         # Realizar la llamada
         result = fal_client.subscribe(
             endpoint,
@@ -362,9 +352,6 @@ def generate_video(
             with_logs=True,
             on_queue_update=on_queue_update
         )
-        
-        print("📥 Respuesta recibida:")
-        print(f"🔍 Resultado completo: {result}")
         
         # Extraer URL del video
         video_url = None
@@ -381,16 +368,14 @@ def generate_video(
                         break
         
         if video_url:
-            print("✅ Video generado exitosamente!")
-            print(f"🔗 URL: {video_url}")
+            print("OK")
             return video_url
         else:
-            print("❌ No se pudo extraer la URL del video")
-            print(f"📋 Estructura de respuesta: {result}")
+            print("ERROR: No se pudo extraer URL")
             return None
             
     except Exception as e:
-        print(f"❌ Error durante la generación: {str(e)}")
+        print(f"ERROR: {str(e)}")
         raise
 
 # Función para calcular costo estimado
@@ -420,107 +405,14 @@ def estimate_cost(duration_sec, resolution="720p", fps=24, model="wan"):
 
 # Función para listar modelos disponibles
 def list_models():
-    print("🎬 Modelos de video disponibles:")
+    print(">> Modelos de video disponibles:")
     for key, endpoint in VIDEO_MODELS.items():
         print(f"  - {key}: {endpoint}")
 
-# Función especializada para generar videos educativos de español
-def generate_educational_spanish_video(
-    content_type: str,
-    word_or_topic: str = "",
-    phonetic: str = "",
-    context: str = "classroom",
-    emphasis: str = "mouth_focus",
-    setting: str = "spain",
-    activity: str = "daily_life",
-    grammar_point: str = "",
-    visual_aid: str = "text_overlay",
-    duration: int = 3,
-    model: str = "wan"
-) -> Optional[str]:
-    """
-    Generate educational Spanish videos using optimized prompts for different content types
-    
-    Args:
-        content_type: "pronunciation", "cultural", or "grammar"
-        word_or_topic: The word to pronounce or topic to cover
-        phonetic: Phonetic transcription (for pronunciation)
-        context: Setting context (classroom, studio, cultural, home_office)
-        emphasis: Focus type (mouth_focus, teacher_full, split_screen)
-        setting: Cultural setting (spain, restaurant, market, home)
-        activity: Cultural activity (daily_life, dining, shopping, conversation)
-        grammar_point: Grammar concept to explain
-        visual_aid: Visual aid type (text_overlay, whiteboard, digital_screen, props)
-        duration: Video duration in seconds
-        model: AI model to use
-    
-    Returns:
-        URL of generated video or None if failed
-    """
-    
-    print(f"🎓 Generando video educativo de español: {content_type}")
-    
-    # Generate appropriate prompt based on content type
-    if content_type == "pronunciation":
-        if not word_or_topic:
-            raise ValueError("Para pronunciación, 'word_or_topic' es requerido")
-        
-        prompt = SpanishEducationHelper.create_pronunciation_prompt(
-            word=word_or_topic,
-            phonetic=phonetic or f"[{word_or_topic}]",
-            context=context,
-            emphasis=emphasis
-        )
-        
-    elif content_type == "cultural":
-        prompt = SpanishEducationHelper.create_cultural_context_prompt(
-            topic=word_or_topic or "Spanish culture",
-            setting=setting,
-            activity=activity
-        )
-        
-    elif content_type == "grammar":
-        prompt = SpanishEducationHelper.create_grammar_demonstration_prompt(
-            grammar_point=grammar_point or word_or_topic or "Spanish grammar",
-            visual_aid=visual_aid
-        )
-        
-    else:
-        raise ValueError("content_type debe ser 'pronunciation', 'cultural', o 'grammar'")
-    
-    print(f"📝 Prompt generado: {prompt[:100]}...")
-    
-    try:
-        # Generate the video
-        video_url = generate_video(
-            prompt=prompt,
-            duration=duration,
-            model=model
-        )
-        
-        if video_url:
-            print(f"✅ Video educativo generado exitosamente!")
-            print(f"🎯 Tipo: {content_type}")
-            print(f"📚 Tema: {word_or_topic or grammar_point}")
-            print(f"🔗 URL: {video_url}")
-            
-            # Calculate and show cost
-            cost = estimate_cost(duration, model=model)
-            print(f"💰 Costo estimado: USD {cost}")
-            
-        return video_url
-        
-    except Exception as e:
-        print(f"❌ Error generando video educativo: {e}")
-        return None
-
 # Función para descargar video desde URL
 def download_video(video_url: str, output_path: str) -> bool:
-    """
-    Descarga un video desde una URL y lo guarda en el path especificado
-    """
+    """Descarga un video desde una URL y lo guarda en el path especificado"""
     try:
-        print(f"   📥 Descargando video...")
         response = requests.get(video_url, stream=True)
         response.raise_for_status()
         
@@ -529,11 +421,9 @@ def download_video(video_url: str, output_path: str) -> bool:
                 if chunk:
                     f.write(chunk)
         
-        print(f"   ✅ Video guardado en: {output_path}")
         return True
         
     except Exception as e:
-        print(f"   ❌ Error descargando video: {e}")
         return False
 
 # Función principal para procesar segmented_prompts.json y generar videos
@@ -553,14 +443,12 @@ def process_segmented_prompts_and_generate_videos(
     if output_dir is None:
         output_dir = str(VideoGenerationConfig.OUTPUT_DIR)
     
-    print("🎬 Iniciando procesamiento de prompts segmentados...")
-    print(f"📖 Input: {input_file}")
-    print(f"💾 Output: {output_dir}")
+    print(f">> Generando videos con IA...")
     
     # Validar configuración
     config_errors = validate_all_paths()
     if config_errors:
-        print("❌ ERRORES DE CONFIGURACIÓN:")
+        print("[ERROR] ERRORES DE CONFIGURACIÓN:")
         for error in config_errors:
             print(f"  - {error}")
         return []
@@ -575,7 +463,7 @@ def process_segmented_prompts_and_generate_videos(
             data = json.load(f)
         
         phrases = data.get('analysis', {}).get('phrases_with_video_prompts', [])
-        print(f"🎭 Encontradas {len(phrases)} frases para procesar")
+        print(f"  Procesando {len(phrases)} frases...")
         
         generated_videos = []
         total_cost = 0.0
@@ -586,12 +474,8 @@ def process_segmented_prompts_and_generate_videos(
             editing_suggestion = phrase.get('editing_suggestion', '')
             segmentation = phrase.get('segmentation', {})
             
-            print(f"\n🎬 Procesando Frase {phrase_num}: {phrase_text[:50]}...")
-            print(f"   📝 Sugerencia de edición: {editing_suggestion}")
-            
             # Solo procesar si la sugerencia NO es "Narrator only on screen"
             if editing_suggestion == "Narrator only on screen":
-                print(f"   ⏭️ Saltando - Solo narrador en pantalla")
                 continue
             
             prompts_to_generate = []
@@ -600,7 +484,6 @@ def process_segmented_prompts_and_generate_videos(
             if segmentation.get('needs_segmentation', False):
                 # Usar prompts segmentados
                 segments = segmentation.get('segments', [])
-                print(f"   🔪 Frase segmentada en {len(segments)} partes")
                 
                 for segment in segments:
                     prompts_to_generate.append({
@@ -622,7 +505,6 @@ def process_segmented_prompts_and_generate_videos(
                         'is_segmented': False
                     })
                 else:
-                    print(f"   ⚠️ No se encontró video_prompt para la frase {phrase_num}")
                     continue
             
             # Generar videos para cada prompt
@@ -632,12 +514,9 @@ def process_segmented_prompts_and_generate_videos(
                 segment_num = prompt_data['segment_number']
                 
                 if not prompt_text:
-                    print(f"   ⚠️ Prompt vacío para segmento {segment_num}")
                     continue
                 
-                print(f"\n   🎥 Generando video {i}/{len(prompts_to_generate)} (Segmento {segment_num})")
-                print(f"   ⏱️ Duración objetivo: {duration}s")
-                print(f"   📝 Prompt: {prompt_text[:100]}...")
+                print(f"  [{phrase_num}.{segment_num}]", end=" ")
                 
                 try:
                     # Generar video
@@ -687,16 +566,12 @@ def process_segmented_prompts_and_generate_videos(
                             }
                             
                             generated_videos.append(video_info)
-                            
-                            print(f"   ✅ Video generado exitosamente: {filename}")
-                            print(f"   💰 Costo: ${cost:.4f}")
+                            print(f" OK ${cost:.3f}")
                         else:
-                            print(f"   ❌ Error descargando video para frase {phrase_num}, segmento {segment_num}")
-                    else:
-                        print(f"   ❌ Error generando video para frase {phrase_num}, segmento {segment_num}")
+                            print(f" ERROR descarga")
                         
                 except Exception as e:
-                    print(f"   ❌ Error procesando frase {phrase_num}, segmento {segment_num}: {e}")
+                    print(f" ERROR: {str(e)[:30]}")
                     continue
         
         # Guardar JSON con información de videos generados
@@ -720,95 +595,73 @@ def process_segmented_prompts_and_generate_videos(
             json.dump(metadata, f, indent=2, ensure_ascii=False)
         
         # Resumen final
-        print(f"\n🎉 Procesamiento completado!")
-        print(f"📊 Resumen:")
-        print(f"   • Videos generados: {len(generated_videos)}")
-        print(f"   • Costo total: ${total_cost:.4f} USD")
-        print(f"   • Directorio de salida: {output_dir}")
-        print(f"   • Archivo de metadatos: {metadata_file}")
+        print(f"[OK] Videos generados: {len(generated_videos)}, Costo: ${total_cost:.3f}")
         
         return generated_videos
         
     except Exception as e:
-        print(f"❌ Error procesando archivo: {e}")
+        print(f"[ERROR] Error procesando archivo: {e}")
         return []
 
-# --- Ejecución de prueba ---
-if __name__ == "__main__":
-    print("🎥 Generador de Video con fal.ai")
-    print("=" * 40)
+def main():
+    """Función principal con CLI para ejecutar la generación de videos"""
     
-    # Mostrar modelos disponibles
-    list_models()
-    print()
+    parser = argparse.ArgumentParser(description='Generador de Videos con IA - Script Unificado')
+    parser.add_argument('--input', 
+                       default=str(VideoGenerationConfig.INPUT_FILE),
+                       help='Archivo JSON de entrada con prompts segmentados')
+    parser.add_argument('--output', 
+                       default=str(VideoGenerationConfig.OUTPUT_DIR),
+                       help='Directorio de salida para videos generados')
+    parser.add_argument('--fps', type=int, default=30,
+                       help='Frames por segundo objetivo (default: 30)')
+    parser.add_argument('--model', default='wan',
+                       help='Modelo de AI a usar (default: wan)')
+    parser.add_argument('--list-models', action='store_true',
+                       help='Mostrar modelos disponibles y salir')
     
-    # Configuración para contenido educativo de español
-    print("\n🎓 Ejemplo de contenido educativo de español:")
+    args = parser.parse_args()
     
-    # Ejemplo 1: Prompt optimizado con Wan 2.2 para pronunciación
-    pronunciation_prompt = SpanishEducationHelper.create_pronunciation_prompt(
-        word="jamón",
-        phonetic="ha-MON",
-        context="classroom",
-        emphasis="mouth_focus"
-    )
+    if args.list_models:
+        list_models()
+        return
     
-    print(f"\n📝 Prompt de pronunciación generado:")
-    print(f"   {pronunciation_prompt}")
-    
-    # Ejemplo 2: Prompt básico usando fórmula básica
-    basic_prompt = WanPromptBuilder.basic_formula(
-        subject="Spanish teacher explaining pronunciation",
-        scene="in a modern classroom",
-        motion="speaking clearly and demonstrating mouth movements"
-    )
-    
-    print(f"\n📝 Prompt básico generado:")
-    print(f"   {basic_prompt}")
-    
-    # Configuración para la prueba
-    model = "wan"  # Modelo principal recomendado
-    duration = 3  # Ideal para contenido educativo corto
-    
-    # Usar el prompt de pronunciación para la prueba
-    prompt = pronunciation_prompt
+    # Información mínima para cuando se ejecuta directamente
     
     try:
-        # Procesar archivo de prompts segmentados y generar videos
-        print(f"\n🎬 Procesando prompts segmentados y generando videos...")
-        
+        # Ejecutar procesamiento
         generated_videos = process_segmented_prompts_and_generate_videos(
-            target_fps=30,
-            model="wan"
+            input_file=args.input,
+            output_dir=args.output,
+            target_fps=args.fps,
+            model=args.model
         )
         
         if generated_videos:
-            print(f"\n🎉 ¡Proceso completado exitosamente!")
-            print(f"📹 Videos generados: {len(generated_videos)}")
+            print(f"\n[OK] ¡Procesamiento completado exitosamente!")
+            print(f">> Total de videos generados: {len(generated_videos)}")
             
-            # Mostrar resumen de los primeros videos
-            print(f"\n📋 Primeros videos generados:")
-            for video in generated_videos[:3]:
-                print(f"   • {video['video_filename']} - Frase {video['phrase_number']} - ${video['cost_usd']:.4f}")
-                
-            if len(generated_videos) > 3:
-                print(f"   • ... y {len(generated_videos) - 3} videos más")
-        
-        # Ejemplo alternativo con función educativa individual
-        print(f"\n" + "="*50)
-        print(f"🎓 Ejemplo adicional - Video educativo individual:")
-        
-        educational_url = generate_educational_spanish_video(
-            content_type="pronunciation",
-            word_or_topic="hola",
-            phonetic="OH-la",
-            context="studio",
-            emphasis="mouth_focus",
-            duration=3
-        )
-        
-        if educational_url:
-            print(f"\n✨ Video educativo generado: {educational_url}")
-        
+            total_cost = sum(video['cost_usd'] for video in generated_videos)
+            print(f">> Costo total estimado: ${total_cost:.4f} USD")
+            
+            # Mostrar resumen detallado
+            print(f"\n>> Videos generados:")
+            for video in generated_videos:
+                print(f"   • {video['video_filename']} - Frase {video['phrase_number']}, Seg {video['segment_number']} - {video['duration_seconds']}s - ${video['cost_usd']:.4f}")
+            
+            print(f"\n>> Videos guardados en: {args.output}")
+            print(f">> Metadatos guardados en: {VideoGenerationConfig.METADATA_DIR}/{VideoGenerationConfig.METADATA_FILE}")
+            
+        else:
+            print(f"\n[ERROR] No se generaron videos. Revisa el archivo de entrada y la configuración.")
+            sys.exit(1)
+            
+    except FileNotFoundError:
+        print(f"[ERROR] Error: No se encontró el archivo de entrada: {args.input}")
+        sys.exit(1)
     except Exception as e:
-        print(f"💥 Error: {e}")
+        print(f"[ERROR] Error durante el procesamiento: {e}")
+        sys.exit(1)
+
+if __name__ == "__main__":
+    main()

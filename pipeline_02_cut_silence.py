@@ -20,10 +20,10 @@ def find_video_file_flexible():
     video_path = SilenceCutConfig.VIDEO_INPUT_PATH
     
     if video_path.exists():
-        print(f"✅ Archivo de video encontrado: {video_path}")
+        print(f"[OK] Archivo de video encontrado: {video_path}")
         return str(video_path)
     else:
-        print(f"❌ No se encontró el archivo de video: {video_path}")
+        print(f"[ERROR] No se encontró el archivo de video: {video_path}")
         return None
 
 def parse_srt_time(time_str):
@@ -80,14 +80,14 @@ def parse_srt_file(srt_path):
                     })
                 except Exception as e:
                     if SilenceCutConfig.VERBOSE:
-                        print(f"⚠️  Error parseando timestamp '{timestamp_line}': {e}")
+                        print(f"WARNING: Error parseando timestamp '{timestamp_line}': {e}")
                     continue
     
     # Ordenar por tiempo de inicio
     segments.sort(key=lambda x: x['start'])
     
     if SilenceCutConfig.VERBOSE:
-        print(f"📄 Parseados {len(segments)} segmentos del archivo SRT")
+        print(f">> Parseados {len(segments)} segmentos del archivo SRT")
     
     return segments
 
@@ -133,9 +133,9 @@ def detect_speech_segments(srt_segments):
     merged_segments.append(current_segment)
     
     if SilenceCutConfig.VERBOSE:
-        print(f"🎯 Detectados {len(merged_segments)} segmentos de habla (después de fusionar)")
+        print(f">> Detectados {len(merged_segments)} segmentos de habla (después de fusionar)")
         total_speech_time = sum(seg['end'] - seg['start'] for seg in merged_segments)
-        print(f"⏱️  Tiempo total de habla: {total_speech_time:.2f} segundos")
+        print(f">> Tiempo total de habla: {total_speech_time:.2f} segundos")
     
     return merged_segments
 
@@ -144,14 +144,14 @@ def cut_video_segments(video_path, speech_segments, output_path):
     Corta el video manteniendo solo los segmentos con habla
     """
     if SilenceCutConfig.VERBOSE:
-        print("🎬 Cargando video original...")
+        print(">> Cargando video original...")
     
     # Cargar video
     video = VideoFileClip(video_path)
     original_duration = video.duration
     
     if SilenceCutConfig.VERBOSE:
-        print(f"📏 Duración original: {original_duration:.2f} segundos")
+        print(f">> Duración original: {original_duration:.2f} segundos")
     
     # Crear clips para cada segmento de habla
     clips = []
@@ -162,44 +162,44 @@ def cut_video_segments(video_path, speech_segments, output_path):
         
         if start_time >= original_duration:
             if SilenceCutConfig.VERBOSE:
-                print(f"⚠️  Segmento {i+1} excede duración del video, omitiendo")
+                print(f"WARNING: Segmento {i+1} excede duración del video, omitiendo")
             continue
         
         if end_time <= start_time:
             if SilenceCutConfig.VERBOSE:
-                print(f"⚠️  Segmento {i+1} tiene duración inválida, omitiendo")
+                print(f"WARNING: Segmento {i+1} tiene duración inválida, omitiendo")
             continue
         
         if SilenceCutConfig.VERBOSE:
-            print(f"✂️  Cortando segmento {i+1}: {start_time:.2f}s - {end_time:.2f}s ({end_time-start_time:.2f}s)")
+            print(f">> Cortando segmento {i+1}: {start_time:.2f}s - {end_time:.2f}s ({end_time-start_time:.2f}s)")
         
         # Crear subclip
         try:
             clip = video.subclip(start_time, end_time)
             clips.append(clip)
         except Exception as e:
-            print(f"❌ Error cortando segmento {i+1}: {e}")
+            print(f"[ERROR] Error cortando segmento {i+1}: {e}")
             continue
     
     if not clips:
         raise ValueError("No se pudieron crear clips válidos")
     
     if SilenceCutConfig.VERBOSE:
-        print(f"🔗 Concatenando {len(clips)} clips...")
+        print(f">> Concatenando {len(clips)} clips...")
     
     # Obtener resolución original del video
     original_size = video.size  # (width, height)
     original_fps = video.fps
     
     if SilenceCutConfig.VERBOSE:
-        print(f"📐 Resolución original: {original_size[0]}x{original_size[1]} @ {original_fps:.2f} fps")
+        print(f">> Resolución original: {original_size[0]}x{original_size[1]} @ {original_fps:.2f} fps")
     
     # Asegurar que todos los clips tengan la misma resolución
     clips_resized = []
     for i, clip in enumerate(clips):
         if clip.size != original_size:
             if SilenceCutConfig.VERBOSE:
-                print(f"🔧 Redimensionando clip {i+1} de {clip.size} a {original_size}")
+                print(f">> Redimensionando clip {i+1} de {clip.size} a {original_size}")
             clip_resized = clip.resize(original_size)
             clips_resized.append(clip_resized)
         else:
@@ -212,9 +212,9 @@ def cut_video_segments(video_path, speech_segments, output_path):
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     if SilenceCutConfig.VERBOSE:
-        print(f"💾 Guardando video sin silencios...")
-        print(f"📁 Ruta de salida: {output_path}")
-        print(f"📐 Resolución final: {final_video.size[0]}x{final_video.size[1]} @ {final_video.fps:.2f} fps")
+        print(f">> Guardando video sin silencios...")
+        print(f">> Ruta de salida: {output_path}")
+        print(f">> Resolución final: {final_video.size[0]}x{final_video.size[1]} @ {final_video.fps:.2f} fps")
     
     # Guardar video final preservando resolución y aspect ratio
     final_video.write_videofile(
@@ -253,16 +253,16 @@ def cut_video_segments(video_path, speech_segments, output_path):
     }
 
 def main():
-    print("✂️  CORTADOR DE SILENCIOS BASADO EN SRT")
+    print(">> CORTADOR DE SILENCIOS BASADO EN SRT")
     print("=" * 50)
     
     # Validar configuración
     config_errors = validate_all_paths()
     if config_errors:
-        print("❌ ERRORES DE CONFIGURACIÓN:")
+        print("[ERROR] ERRORES DE CONFIGURACIÓN:")
         for error in config_errors:
             print(f"  - {error}")
-        print("🔧 Revisa el archivo config.py")
+        print(">> Revisa el archivo config.py")
         sys.exit(1)
     
     # Mostrar configuración si está habilitado
@@ -272,48 +272,48 @@ def main():
     
     try:
         # Paso 0: Encontrar archivo de video (flexible)
-        print("🔍 Paso 0: Buscando archivo de video...")
+        print(">> Paso 0: Buscando archivo de video...")
         video_file = find_video_file_flexible()
         if not video_file:
-            print("❌ No se encontró ningún archivo MP4")
+            print("[ERROR] No se encontró ningún archivo MP4")
             sys.exit(1)
         
         # Paso 1: Parsear archivo SRT
-        print("📄 Paso 1: Parseando archivo SRT...")
+        print(">> Paso 1: Parseando archivo SRT...")
         srt_path = SilenceCutConfig.SRT_INPUT_PATH
-        print(f"🔍 Usando archivo SRT: {srt_path}")
+        print(f">> Usando archivo SRT: {srt_path}")
         srt_segments = parse_srt_file(str(srt_path))
         
         if not srt_segments:
-            print("❌ No se encontraron segmentos válidos en el archivo SRT")
+            print("[ERROR] No se encontraron segmentos válidos en el archivo SRT")
             sys.exit(1)
         
         # Paso 2: Detectar segmentos de habla
-        print("🎯 Paso 2: Detectando segmentos de habla...")
+        print(">> Paso 2: Detectando segmentos de habla...")
         speech_segments = detect_speech_segments(srt_segments)
         
         if not speech_segments:
-            print("❌ No se detectaron segmentos de habla")
+            print("[ERROR] No se detectaron segmentos de habla")
             sys.exit(1)
         
         # Paso 3: Cortar video
-        print("✂️  Paso 3: Cortando video...")
+        print(">> Paso 3: Cortando video...")
         # Nombre único estándar para el pipeline
         output_filename = "video_no_silence.mp4"
-        output_path = SilenceCutConfig.OUTPUT_DIRECTORY / output_filename
+        output_path = str(SilenceCutConfig.OUTPUT_DIRECTORY / output_filename)
         
         result = cut_video_segments(video_file, speech_segments, output_path)
         
         print("\n" + "=" * 50)
-        print("🎉 PROCESO COMPLETADO EXITOSAMENTE")
+        print("[OK] PROCESO COMPLETADO EXITOSAMENTE")
         print("=" * 50)
-        print(f"📁 Video guardado en: {output_path}")
-        print(f"⏱️  Duración original: {result['original_duration']:.2f}s")
-        print(f"⏱️  Duración final: {result['final_duration']:.2f}s")
-        print(f"💾 Tiempo ahorrado: {result['time_saved']:.2f}s ({result['percentage_saved']:.1f}%)")
+        print(f">> Video guardado en: {output_path}")
+        print(f">> Duración original: {result['original_duration']:.2f}s")
+        print(f">> Duración final: {result['final_duration']:.2f}s")
+        print(f">> Tiempo ahorrado: {result['time_saved']:.2f}s ({result['percentage_saved']:.1f}%)")
         
     except Exception as e:
-        print(f"❌ Error durante el procesamiento: {str(e)}")
+        print(f"[ERROR] Error durante el procesamiento: {str(e)}")
         if SilenceCutConfig.VERBOSE:
             import traceback
             traceback.print_exc()

@@ -239,17 +239,17 @@ def validate_all_paths():
 
 def print_configuration_summary():
     """Imprime un resumen de la configuración actual"""
-    print("🔧 CONFIGURACIÓN DEL PIPELINE DE PRODUCCIÓN DE VIDEO")
+    print(">> CONFIGURACIÓN DEL PIPELINE DE PRODUCCIÓN DE VIDEO")
     print("=" * 60)
-    print(f"📁 Directorio de producción: {VIDEO_PRODUCTION_DIR}")
-    print(f"🎯 Generación de contenido: {CONTENT_GENERATION_DIR}")
-    print(f"🎬 Grabación de video: {VIDEO_RECORDING_DIR}")
-    print(f"⚙️  Procesamiento de video: {VIDEO_PROCESSING_DIR}")
-    print(f"🤖 Generación de video AI: {VIDEO_GENERATION_DIR}")
-    print(f"\n🎤 Modelo Whisper: {TranscriptionConfig.WHISPER_MODEL}")
-    print(f"🎬 Codec de video: {SilenceCutConfig.VIDEO_CODEC}")
-    print(f"🤖 Modelo AI: {SegmentedPromptsConfig.MODEL_NAME}")
-    print(f"🎥 Modelo de video: {VideoGenerationConfig.DEFAULT_MODEL}")
+    print(f">> Directorio de producción: {VIDEO_PRODUCTION_DIR}")
+    print(f">> Generación de contenido: {CONTENT_GENERATION_DIR}")
+    print(f">> Grabación de video: {VIDEO_RECORDING_DIR}")
+    print(f">> Procesamiento de video: {VIDEO_PROCESSING_DIR}")
+    print(f">> Generación de video AI: {VIDEO_GENERATION_DIR}")
+    print(f"\n>> Modelo Whisper: {TranscriptionConfig.WHISPER_MODEL}")
+    print(f">> Codec de video: {SilenceCutConfig.VIDEO_CODEC}")
+    print(f">> Modelo AI: {SegmentedPromptsConfig.MODEL_NAME}")
+    print(f">> Modelo de video: {VideoGenerationConfig.DEFAULT_MODEL}")
     print("=" * 60)
 
 # ===== PERFILES PREDEFINIDOS =====
@@ -267,24 +267,24 @@ def apply_quality_profile(profile="high"):
         SubtitlesConfig.WHISPER_MODEL = "base"
         TranscriptionConfig.BEST_OF = 1
         SilenceCutConfig.CRF_VALUE = 28
-        print("🚀 Perfil aplicado: RÁPIDO")
+        print(">> Perfil aplicado: RÁPIDO")
         
     elif profile == "balanced":
         TranscriptionConfig.WHISPER_MODEL = "medium"
         SubtitlesConfig.WHISPER_MODEL = "medium"
         TranscriptionConfig.BEST_OF = 3
         SilenceCutConfig.CRF_VALUE = 23
-        print("⚖️  Perfil aplicado: BALANCEADO")
+        print(">> Perfil aplicado: BALANCEADO")
         
     elif profile == "high":
         TranscriptionConfig.WHISPER_MODEL = "large-v3"
         SubtitlesConfig.WHISPER_MODEL = "large-v3"
         TranscriptionConfig.BEST_OF = 5
         SilenceCutConfig.CRF_VALUE = 20
-        print("💎 Perfil aplicado: ALTA CALIDAD")
+        print(">> Perfil aplicado: ALTA CALIDAD")
         
     else:
-        print(f"⚠️  Perfil '{profile}' no reconocido. Usando configuración actual.")
+        print(f"WARNING: Perfil '{profile}' no reconocido. Usando configuración actual.")
 
 if __name__ == "__main__":
     # Mostrar configuración
@@ -293,8 +293,8 @@ if __name__ == "__main__":
     # Validar configuración
     errors = validate_all_paths()
     if errors:
-        print("\n❌ ERRORES DE CONFIGURACIÓN:")
+        print("\n[ERROR] ERRORES DE CONFIGURACIÓN:")
         for error in errors:
             print(f"  - {error}")
     else:
-        print("\n✅ Configuración válida - Todos los directorios listos")
+        print("\n[OK] Configuración válida - Todos los directorios listos")

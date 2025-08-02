@@ -4,6 +4,9 @@ Divides long duration phrases into 2-3 second segments with adapted prompts
 """
 import json
 import math
+import argparse
+import sys
+import os
 from typing import List, Tuple, Optional
 from pydantic import BaseModel
 from pydantic_ai import Agent
@@ -75,14 +78,14 @@ You are a viral Instagram Reels content creator and editor specialized in creati
 
 Your task is to break down Instagram Reels video prompts into time-specific segments that create viral, engaging content optimized for vertical 9:16 format.
 
-🎯 INSTAGRAM REELS SEGMENT OPTIMIZATION:
+>> INSTAGRAM REELS SEGMENT OPTIMIZATION:
 
 1. **Visual Progression**: Each segment builds excitement and engagement
 2. **Viral Continuity**: Segments flow smoothly to keep viewers hooked
 3. **Modern Aesthetic**: Trendy, dynamic, social media optimized
 4. **Educational Value**: Informative but entertaining and shareable
 
-🎬 SEGMENT FOCUS STRATEGY:
+>> SEGMENT FOCUS STRATEGY:
 - **Segment 1 (inicio)**: Hook viewer with dynamic establishing shot, trendy lighting, engaging setup
 - **Middle segments (desarrollo)**: Build momentum with smooth transitions, vibrant visuals, interactive elements
 - **Final segment (cierre)**: Strong conclusion with memorable visual, call-to-action ready
@@ -155,7 +158,7 @@ def process_phrase_segments(phrase_data: dict, adapter_agent: Agent) -> dict:
             }
         }
     
-    print(f"    🔪 Segmenting into {len(segments)} parts (duration: {duration:.1f}s)")
+    print(f"    >> Segmenting into {len(segments)} parts (duration: {duration:.1f}s)")
     
     try:
         # Create input for segment adaptation
@@ -228,7 +231,7 @@ Generate adapted prompts for each segment that work together as a cohesive seque
         }
         
     except Exception as e:
-        print(f"    ❌ Error segmenting phrase: {e}")
+        print(f"    [ERROR] Error segmenting phrase: {e}")
         return {
             **phrase_data,
             'segmentation': {
@@ -239,48 +242,80 @@ Generate adapted prompts for each segment that work together as a cohesive seque
             }
         }
 
-def generate_segmented_prompts(input_file: str = None, output_file: str = None):
+def generate_segmented_prompts_for_script(script_id: int, input_file: str = None, output_file: str = None):
     """
-    Main function to generate segmented video prompts
+    Generate segmented video prompts for a specific script ID
+    
+    Args:
+        script_id: ID del script a procesar (obligatorio)
+        input_file: Archivo JSON sincronizado de entrada (opcional)
+        output_file: Archivo JSON de salida con prompts segmentados (opcional)
     """
     try:
-        # Use config paths if not provided
-        input_path = input_file or SegmentedPromptsConfig.INPUT_FILE
-        output_path = output_file or (SegmentedPromptsConfig.OUTPUT_DIR / SegmentedPromptsConfig.OUTPUT_FILENAME)
+        # Determinar archivo de entrada
+        if input_file is None:
+            # The synchronized script is saved by pipeline_04 in the synchronization directory
+            from config import SynchronizationConfig
+            base_dir = SynchronizationConfig.OUTPUT_DIRECTORY
+            input_file = base_dir / f"synchronized_script_id_{script_id}.json"
         
-        print("🚀 Starting segmented prompt generation...")
-        print(f"📖 Input: {input_path}")
-        print(f"💾 Output: {output_path}")
+        # Determinar archivo de salida
+        if output_file is None:
+            output_dir = SegmentedPromptsConfig.OUTPUT_DIR
+            output_file = output_dir / f"segmented_prompts_id_{script_id}.json"
         
-        # Validate paths and ensure output directory
-        config_errors = validate_all_paths()
-        if config_errors:
-            print("❌ ERRORES DE CONFIGURACIÓN:")
-            for error in config_errors:
-                print(f"  - {error}")
-            return
+        print(">> SEGMENTED PROMPTS GENERATOR - SINGLE SCRIPT MODE")
+        print("=" * 60)
+        print(f">> Target Script ID: {script_id}")
+        print(f">> Input: {input_file}")
+        print(f">> Output: {output_file}")
+        print()
+        
+        # Verificar que el archivo de entrada existe
+        if not os.path.exists(input_file):
+            print(f"[ERROR] Input file not found: {input_file}")
+            print(f"Make sure you've run pipeline_04_synchronize_script.py --script-id {script_id} first")
+            return None
         
         # Load synchronized script data
-        print(f"\n📖 Loading synchronized script data...")
-        with open(input_path, 'r', encoding='utf-8') as f:
+        print(">> Loading synchronized script data...")
+        with open(input_file, 'r', encoding='utf-8') as f:
             script_data = json.load(f)
         
-        print(f"✅ Loaded script: {script_data.get('topic', 'Unknown topic')}")
+        # Validar que el ID coincida
+        script_id_in_file = script_data.get('id')
+        if script_id_in_file != script_id:
+            print(f"[ERROR] Script ID mismatch! Expected {script_id}, found {script_id_in_file}")
+            return None
+        
+        topic = script_data.get('topic', 'Unknown topic')
+        print(f"[OK] Loaded script: {topic}")
+        
+        # Verificar que el script tiene información de sincronización
+        sync_info = script_data.get('synchronization')
+        if not sync_info:
+            print(f"[ERROR] Script {script_id} has no synchronization data!")
+            print("Make sure the script was synchronized with pipeline_04 first")
+            return None
+        
+        print(f">> Sync method used: {sync_info.get('method', 'Unknown')}")
+        print(f">> Matched phrases: {sync_info.get('matched_phrases', 0)}/{sync_info.get('total_phrases', 0)}")
         
         # Create adapter agent
-        print("🤖 Initializing segment adapter agent...")
+        print(">> Initializing segment adapter agent...")
         adapter_agent = create_segment_prompt_adapter()
         
         # Process phrases
         phrases = script_data.get('analysis', {}).get('phrases_with_video_prompts', [])
-        print(f"🎬 Processing {len(phrases)} phrases...")
+        print(f">> Processing {len(phrases)} phrases for segmentation...")
         
         processed_phrases = []
         total_segments_created = 0
         phrases_segmented = 0
         
         for i, phrase in enumerate(phrases, 1):
-            print(f"\n🎭 Processing phrase {i}/{len(phrases)}: {phrase.get('phrase', '')[:50]}...")
+            phrase_text = phrase.get('phrase', '')[:50]
+            print(f"\n>> Processing phrase {i}/{len(phrases)}: {phrase_text}...")
             
             processed_phrase = process_phrase_segments(phrase, adapter_agent)
             processed_phrases.append(processed_phrase)
@@ -291,9 +326,9 @@ def generate_segmented_prompts(input_file: str = None, output_file: str = None):
                 segments_count = len(segmentation.get('segments', []))
                 total_segments_created += segments_count
                 phrases_segmented += 1
-                print(f"    ✅ Created {segments_count} segments")
+                print(f"    [OK] Created {segments_count} segments")
             else:
-                print(f"    ➡️ No segmentation needed: {segmentation.get('reason', 'Unknown')}")
+                print(f"    >> No segmentation needed: {segmentation.get('reason', 'Unknown')}")
         
         # Build final output
         output_data = {
@@ -303,6 +338,7 @@ def generate_segmented_prompts(input_file: str = None, output_file: str = None):
                 'phrases_with_video_prompts': processed_phrases
             },
             'segmentation_summary': {
+                'script_id': script_id,
                 'total_phrases': len(phrases),
                 'phrases_segmented': phrases_segmented,
                 'phrases_not_segmented': len(phrases) - phrases_segmented,
@@ -313,24 +349,61 @@ def generate_segmented_prompts(input_file: str = None, output_file: str = None):
             }
         }
         
+        # Ensure output directory exists
+        os.makedirs(os.path.dirname(output_file), exist_ok=True)
+        
         # Save results
-        print(f"\n💾 Saving segmented prompts to: {output_path}")
-        with open(output_path, 'w', encoding='utf-8') as f:
+        print(f"\n>> Saving segmented prompts to: {output_file}")
+        with open(output_file, 'w', encoding='utf-8') as f:
             json.dump(output_data, f, indent=2, ensure_ascii=False)
         
         # Print summary
-        print(f"\n🎉 Segmentation completed!")
-        print(f"📊 Summary:")
+        print(f"\n[OK] Segmentation completed successfully!")
+        print(f">> Summary:")
+        print(f"   • Script ID: {script_id}")
+        print(f"   • Topic: {topic}")
         print(f"   • Total phrases: {len(phrases)}")
         print(f"   • Phrases segmented: {phrases_segmented}")
         print(f"   • Phrases not segmented: {len(phrases) - phrases_segmented}")
         print(f"   • Total segments created: {total_segments_created}")
-        print(f"   • Average segments per phrase: {total_segments_created / phrases_segmented:.1f}" if phrases_segmented > 0 else "   • Average segments per phrase: 0")
-        print(f"   • Output file: {output_path}")
+        if phrases_segmented > 0:
+            avg_segments = total_segments_created / phrases_segmented
+            print(f"   • Average segments per phrase: {avg_segments:.1f}")
+        else:
+            print(f"   • Average segments per phrase: 0")
+        print(f"   • Output file: {output_file}")
+        
+        return output_data
         
     except Exception as e:
-        print(f"❌ Error: {e}")
-        raise
+        print(f"[ERROR] Error generating segmented prompts for script {script_id}: {e}")
+        return None
 
 if __name__ == "__main__":
-    generate_segmented_prompts()
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Generate segmented video prompts for a specific script ID')
+    parser.add_argument('--script-id', type=int, required=True,
+                       help='Script ID to process (required, range: 1-60)')
+    parser.add_argument('--input-file', type=str, help='Input synchronized script JSON file (optional)')
+    parser.add_argument('--output-file', type=str, help='Output segmented prompts JSON file (optional)')
+    
+    args = parser.parse_args()
+    
+    # Validate script ID range
+    if args.script_id < 1 or args.script_id > 60:
+        print(f"[ERROR] Invalid script ID: {args.script_id}")
+        print("Valid range: 1-60")
+        sys.exit(1)
+    
+    # Process single script segmentation
+    result = generate_segmented_prompts_for_script(
+        script_id=args.script_id,
+        input_file=args.input_file,
+        output_file=args.output_file
+    )
+    
+    if result:
+        print("\n[OK] SUCCESS! Segmented prompts generated successfully")
+    else:
+        print("\n[ERROR] FAILED! Could not generate segmented prompts")
+        sys.exit(1)

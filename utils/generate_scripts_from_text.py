@@ -86,7 +86,6 @@ def create_script_agent(model_name: str):
     
     return Agent(
         model=model_name,
-        input_type=TextScriptInput,
         output_type=ScriptVideo,
         system_prompt=system_prompt
     )

@@ -9,6 +9,7 @@ import sys
 import json
 import re
 import difflib
+import argparse
 from datetime import datetime
 from config import SynchronizationConfig, validate_all_paths, print_configuration_summary
 
@@ -62,14 +63,14 @@ def parse_srt_file(srt_path):
                     })
                 except Exception as e:
                     if SynchronizationConfig.VERBOSE:
-                        print(f"⚠️  Error parseando timestamp '{timestamp_line}': {e}")
+                        print(f">>  Error parseando timestamp '{timestamp_line}': {e}")
                     continue
     
     if SynchronizationConfig.VERBOSE:
-        print(f"📄 Parseados {len(segments)} segmentos del archivo SRT")
+        print(f">> Parseados {len(segments)} segmentos del archivo SRT")
         if segments:
-            print(f"🔍 Primer segmento: \"{segments[0]['text'][:60]}...\"")
-            print(f"⏱️  Timing: {segments[0]['start']:.1f}s - {segments[0]['end']:.1f}s")
+            print(f">> Primer segmento: \"{segments[0]['text'][:60]}...\"")
+            print(f"Time:  Timing: {segments[0]['start']:.1f}s - {segments[0]['end']:.1f}s")
     
     return segments
 
@@ -85,7 +86,7 @@ def load_script_json(json_path):
     
     if SynchronizationConfig.VERBOSE:
         phrases = script_data.get('analysis', {}).get('phrases_with_video_prompts', [])
-        print(f"📋 Cargadas {len(phrases)} frases del script planificado")
+        print(f">> Cargadas {len(phrases)} frases del script planificado")
     
     return script_data
 
@@ -96,7 +97,7 @@ def clean_text_for_comparison(text):
     # Convertir a minúsculas
     text = text.lower()
     # Remover emojis y caracteres especiales
-    text = re.sub(r'[🗣️🎯]+', '', text)
+    text = re.sub(r'[^\w\s]', '', text)
     # Remover puntuación
     text = re.sub(r'[^\w\s]', ' ', text)
     # Normalizar espacios
@@ -152,7 +153,7 @@ def synchronize_by_similarity(script_phrases, srt_segments):
             }
             
             if SynchronizationConfig.SHOW_TEXT_COMPARISON and SynchronizationConfig.VERBOSE:
-                print(f"✅ Emparejado (similitud: {best_similarity:.2f}):")
+                print(f"[OK] Emparejado (similitud: {best_similarity:.2f}):")
                 print(f"   Script: \"{phrase_text[:50]}...\"")
                 print(f"   SRT:    \"{best_match['text'][:50]}...\"")
             
@@ -170,7 +171,7 @@ def synchronize_by_similarity(script_phrases, srt_segments):
             }
             
             if SynchronizationConfig.VERBOSE:
-                print(f"❌ Sin coincidencia para: \"{phrase_text[:50]}...\"")
+                print(f"[ERROR] Sin coincidencia para: \"{phrase_text[:50]}...\"")
             
             synchronized_phrases.append(phrase_with_timing)
     
@@ -281,44 +282,80 @@ def save_synchronized_script(script_data, synchronized_phrases, output_path):
         json.dump(synchronized_script, f, ensure_ascii=False, indent=2)
     
     if SynchronizationConfig.VERBOSE:
-        print(f"💾 Script sincronizado guardado: {output_path}")
+        print(f">> Script sincronizado guardado: {output_path}")
     
     return synchronized_script
 
-def main():
-    print("🔄 SINCRONIZADOR DE SCRIPT CON TIMESTAMPS")
-    print("=" * 50)
+def synchronize_single_script(script_id: int, input_file: str = None, output_file: str = None, srt_file: str = None):
+    """
+    Sincroniza un script específico por ID con timestamps del SRT
     
-    # Validar configuración
-    config_errors = validate_all_paths()
-    if config_errors:
-        print("❌ ERRORES DE CONFIGURACIÓN:")
-        for error in config_errors:
-            print(f"  - {error}")
-        print("🔧 Revisa el archivo config.py")
-        sys.exit(1)
-    
-    # Mostrar configuración si está habilitado
-    if SynchronizationConfig.VERBOSE:
-        print_configuration_summary()
-        print()
-    
+    Args:
+        script_id: ID del script a sincronizar (obligatorio)
+        input_file: Archivo JSON del script analizado (opcional)
+        output_file: Archivo JSON de salida sincronizado (opcional)
+        srt_file: Archivo SRT con timestamps (opcional)
+    """
     try:
+        # Determinar archivo de entrada
+        if input_file is None:
+            base_dir = "VideoProduction/01_ContentGeneration/03_analyzed_scripts"
+            input_file = os.path.join(base_dir, f"analyzed_script_id_{script_id}.json")
+        
+        # Determinar archivo de salida
+        if output_file is None:
+            output_dir = SynchronizationConfig.OUTPUT_DIRECTORY
+            output_file = output_dir / f"synchronized_script_id_{script_id}.json"
+        
+        # Determinar archivo SRT
+        if srt_file is None:
+            srt_file = str(SynchronizationConfig.SRT_INPUT_PATH)
+        
+        print(">> SCRIPT SYNCHRONIZER - SINGLE SCRIPT MODE")
+        print("=" * 55)
+        print(f">> Target Script ID: {script_id}")
+        print(f">> Input: {input_file}")
+        print(f">> SRT File: {srt_file}")
+        print(f">> Output: {output_file}")
+        print(f">> Method: {SynchronizationConfig.SYNC_METHOD}")
+        print()
+        
+        # Verificar que el archivo de entrada existe
+        if not os.path.exists(input_file):
+            print(f"[ERROR] Input file not found: {input_file}")
+            print(f"Make sure you've run content_02_analyze_scripts_video_prompts.py --script-id {script_id} first")
+            return None
+        
+        # Verificar que el archivo SRT existe
+        if not os.path.exists(srt_file):
+            print(f"[ERROR] SRT file not found: {srt_file}")
+            print("Make sure the SRT file exists in the configured path")
+            return None
+        
         # Paso 1: Cargar script JSON
-        print("📋 Paso 1: Cargando script planificado...")
-        script_path = SynchronizationConfig.SCRIPT_JSON_PATH
-        print(f"🔍 Usando archivo script: {script_path}")
-        script_data = load_script_json(str(script_path))
+        print(">> Step 1: Loading analyzed script...")
+        script_data = load_script_json(input_file)
+        
+        # Validar que el ID coincida
+        script_id_in_file = script_data.get('id')
+        if script_id_in_file != script_id:
+            print(f"[ERROR] Script ID mismatch! Expected {script_id}, found {script_id_in_file}")
+            return None
+        
         script_phrases = script_data['analysis']['phrases_with_video_prompts']
+        topic = script_data.get('topic', 'Unknown')
+        
+        print(f"[OK] Loaded script: {topic}")
+        print(f">> Found {len(script_phrases)} phrases to synchronize")
         
         # Paso 2: Parsear archivo SRT
-        print("📄 Paso 2: Parseando archivo SRT...")
-        srt_path = SynchronizationConfig.SRT_INPUT_PATH
-        print(f"🔍 Usando archivo SRT: {srt_path}")
-        srt_segments = parse_srt_file(str(srt_path))
+        print(">> Step 2: Parsing SRT file...")
+        srt_segments = parse_srt_file(srt_file)
+        
+        print(f"[OK] Found {len(srt_segments)} SRT segments")
         
         # Paso 3: Sincronizar según método configurado
-        print(f"🔄 Paso 3: Sincronizando usando método '{SynchronizationConfig.SYNC_METHOD}'...")
+        print(f">> Step 3: Synchronizing using '{SynchronizationConfig.SYNC_METHOD}' method...")
         
         if SynchronizationConfig.SYNC_METHOD == "similarity":
             synchronized_phrases = synchronize_by_similarity(script_phrases, srt_segments)
@@ -326,37 +363,71 @@ def main():
             synchronized_phrases = synchronize_by_order(script_phrases, srt_segments)
         elif SynchronizationConfig.SYNC_METHOD == "hybrid":
             synchronized_phrases = synchronize_hybrid(script_phrases, srt_segments)
+        else:
+            print(f"[ERROR] Unknown synchronization method: {SynchronizationConfig.SYNC_METHOD}")
+            return None
         
         # Paso 4: Guardar resultado
-        print("💾 Paso 4: Guardando script sincronizado...")
-        # Nombre único estándar para el pipeline
-        output_filename = "synchronized_script.json"
-        output_path = SynchronizationConfig.OUTPUT_DIRECTORY / output_filename
+        print(">> Step 4: Saving synchronized script...")
         
-        result = save_synchronized_script(script_data, synchronized_phrases, output_path)
+        result = save_synchronized_script(script_data, synchronized_phrases, output_file)
         
-        print("\n" + "=" * 50)
-        print("🎉 SINCRONIZACIÓN COMPLETADA EXITOSAMENTE")
-        print("=" * 50)
-        print(f"📁 Archivo guardado en: {output_path}")
+        print(f"\n[OK] SYNCHRONIZATION COMPLETED SUCCESSFULLY!")
+        print("=" * 55)
+        print(f">> File saved: {output_file}")
         
         # Estadísticas
         sync_info = result['synchronization']
-        print(f"📊 Estadísticas:")
-        print(f"   Total de frases: {sync_info['total_phrases']}")
-        print(f"   Frases emparejadas: {sync_info['matched_phrases']}")
-        print(f"   Frases sin emparejar: {sync_info['unmatched_phrases']}")
-        print(f"   Método usado: {sync_info['method']}")
+        print(f">> Statistics:")
+        print(f"   • Script ID: {script_id}")
+        print(f"   • Topic: {topic}")
+        print(f"   • Total phrases: {sync_info['total_phrases']}")
+        print(f"   • Matched phrases: {sync_info['matched_phrases']}")
+        print(f"   • Unmatched phrases: {sync_info['unmatched_phrases']}")
+        print(f"   • Method used: {sync_info['method']}")
         
         if sync_info['matched_phrases'] > 0:
             success_rate = (sync_info['matched_phrases'] / sync_info['total_phrases']) * 100
-            print(f"   Tasa de éxito: {success_rate:.1f}%")
+            print(f"   • Success rate: {success_rate:.1f}%")
+        
+        return result
         
     except Exception as e:
-        print(f"❌ Error durante la sincronización: {str(e)}")
+        print(f"[ERROR] Error synchronizing script {script_id}: {str(e)}")
         if SynchronizationConfig.VERBOSE:
             import traceback
             traceback.print_exc()
+        return None
+
+def main():
+    # Parse command line arguments
+    parser = argparse.ArgumentParser(description='Synchronize script with SRT timestamps for a specific script ID')
+    parser.add_argument('--script-id', type=int, required=True,
+                       help='Script ID to synchronize (required, range: 1-60)')
+    parser.add_argument('--input-file', type=str, help='Input analyzed script JSON file (optional)')
+    parser.add_argument('--output-file', type=str, help='Output synchronized script JSON file (optional)')
+    parser.add_argument('--srt-file', type=str, help='Input SRT file with timestamps (optional)')
+    
+    args = parser.parse_args()
+    
+    # Validate script ID range
+    if args.script_id < 1 or args.script_id > 60:
+        print(f"[ERROR] Invalid script ID: {args.script_id}")
+        print("Valid range: 1-60")
+        sys.exit(1)
+    
+    # Process single script synchronization
+    result = synchronize_single_script(
+        script_id=args.script_id,
+        input_file=args.input_file,
+        output_file=args.output_file,
+        srt_file=args.srt_file
+    )
+    
+    if result:
+        print("\n[OK] SUCCESS! Script synchronized successfully")
+    else:
+        print("\n[ERROR] FAILED! Could not synchronize script")
         sys.exit(1)
 
 if __name__ == "__main__":

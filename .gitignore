@@ -6,6 +6,7 @@
 # API Keys y configuración sensible
 
 remotion_edit_video/
+remotion_short_video/
 
 .env
 .env.local

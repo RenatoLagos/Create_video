@@ -1,0 +1,71 @@
+{
+  "defaultConfig": {
+    "fps": 30,
+    "width": 1080,
+    "height": 1920,
+    "subtitlesConfig": {
+      "position": "center",
+      "fontSize": 64,
+      "fontFamily": "Poppins",
+      "color": "white",
+      "strokeWidth": 22,
+      "strokeColor": "black"
+    }
+  },
+  "videos": [
+    {
+      "id": "spanish-lesson-center",
+      "title": "Spanish Lesson - Center Layout",
+      "videoFile": "video.mp4",
+      "audioFile": "audio/video.mp3",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "center",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 64,
+        "fontFamily": "Poppins"
+      }
+    },
+    {
+      "id": "spanish-lesson-bottom",
+      "title": "Spanish Lesson - Bottom Layout",
+      "videoFile": "video.mp4",
+      "audioFile": "audio/video.mp3",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "bottom",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 64,
+        "fontFamily": "Poppins"
+      },
+      "layoutSpecific": {
+        "bottom": {
+          "videoHeight": "50%",
+          "subtitlesTop": "60%",
+          "backgroundColor": "#000000"
+        }
+      }
+    },
+    {
+      "id": "spanish-lesson-circle",
+      "title": "Spanish Lesson - Circle Layout",
+      "videoFile": "video.mp4",
+      "audioFile": "audio/video.mp3",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "circle",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 60,
+        "fontFamily": "Poppins"
+      },
+      "layoutSpecific": {
+        "circle": {
+          "size": 350,
+          "position": { "top": 40, "left": 40 },
+          "borderWidth": 4,
+          "borderColor": "#ffffff"
+        }
+      }
+    }
+  ]
+}

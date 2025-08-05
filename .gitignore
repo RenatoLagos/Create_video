@@ -1,329 +1,173 @@
-# ========================================
-# 🎬 VIDEO PRODUCTION PIPELINE - .gitignore
-# ========================================
+# ===== VIDEO PRODUCTION SUITE - MONOREPO .gitignore =====
 
-# ===== 🔑 ARCHIVOS SENSIBLES Y CONFIGURACIÓN =====
-# API Keys y configuración sensible
+scripts/
+shared-assets/
+remotion_short_video/public/
+remotion_short_video/.env
+remotion_short_video/.eslintignore
+remotion_short_video/.prettierrc
+remotion_short_video/eslint.config.mjs
+remotion_short_video/package-lock.json
+remotion_short_video/package.json
+remotion_short_video/postcss.config.mjs
+remotion_short_video/remotion.config.ts
+remotion_short_video/tsconfig.json
 
-remotion_edit_video/
-remotion_short_video/
+# ===== PYTHON PIPELINE =====
+# Virtual environments
+python-pipeline/venv/
+python-pipeline/__pycache__/
+python-pipeline/*.pyc
+python-pipeline/*.pyo
+python-pipeline/*.pyd
+python-pipeline/.Python
+python-pipeline/build/
+python-pipeline/develop-eggs/
+python-pipeline/dist/
+python-pipeline/downloads/
+python-pipeline/eggs/
+python-pipeline/.eggs/
+python-pipeline/lib/
+python-pipeline/lib64/
+python-pipeline/parts/
+python-pipeline/sdist/
+python-pipeline/var/
+python-pipeline/wheels/
+python-pipeline/share/python-wheels/
+python-pipeline/*.egg-info/
+python-pipeline/.installed.cfg
+python-pipeline/*.egg
 
+# ===== REMOTION SHORT VIDEO (Node.js/TypeScript) =====
+remotion_short_video/node_modules/
+remotion_short_video/npm-debug.log*
+remotion_short_video/yarn-debug.log*
+remotion_short_video/yarn-error.log*
+remotion_short_video/.pnpm-debug.log*
+remotion_short_video/dist/
+remotion_short_video/build/
+remotion_short_video/out/
+remotion_short_video/.next/
+remotion_short_video/.vercel/
+remotion_short_video/.remotion/
+
+# ===== SCRIPTS HTML GENERADOS =====
+# Archivos HTML del narrador generados automáticamente
+# scripts/narrator_short_script_*.html  # Comentado: mantener en repo para referencia
+
+# ===== SHARED ASSETS (OUTPUTS DEL PIPELINE) =====
+# Videos grandes generados/descargados
+shared-assets/VideoProduction/**/*.mp4
+shared-assets/VideoProduction/**/*.avi
+shared-assets/VideoProduction/**/*.mov
+shared-assets/VideoProduction/**/*.wmv
+shared-assets/VideoProduction/**/*.flv
+shared-assets/VideoProduction/**/*.webm
+
+# Audio files generados
+shared-assets/VideoProduction/**/*.mp3
+shared-assets/VideoProduction/**/*.wav
+shared-assets/VideoProduction/**/*.aac
+shared-assets/VideoProduction/**/*.ogg
+
+# Videos grandes en public de Remotion
+remotion_short_video/public/**/*.mp4
+remotion_short_video/public/**/*.avi
+remotion_short_video/public/**/*.mov
+
+# Mantener archivos JSON, SRT, HTML pequeños (configuraciones)
+
+# ===== ENVIRONMENT & SECRETS =====
 .env
 .env.local
-.env.production
-.env.staging
-config_local.py
-secrets.json
-api_keys.txt
-fal_api_key.txt
+.env.development.local
+.env.test.local
+.env.production.local
+.env.*.local
+*.key
+*.pem
+*.p12
+*.pfx
 
-# Configuraciones personales
-config_personal.py
-user_config.py
-local_settings.py
+# ===== SYSTEM FILES =====
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
 
-# ===== 📁 CARPETA PRINCIPAL DE PRODUCCIÓN =====
-# Toda la carpeta VideoProduction/ con outputs del pipeline
-VideoProduction/
-# Si necesitas mantener la estructura, descomenta las siguientes líneas:
-# VideoProduction/**/*
-# !VideoProduction/**/
-# !VideoProduction/**/.gitkeep
+# ===== IDE & EDITORS =====
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.project
+.metadata
+.classpath
+.settings/
 
-# ===== 🎥 ARCHIVOS DE MEDIA PESADOS =====
-# Videos
-*.mp4
-*.avi
-*.mov
-*.mkv
-*.wmv
-*.flv
-*.webm
-*.m4v
-
-# Audio
-*.wav
-*.mp3
-*.aac
-*.flac
-*.ogg
-*.m4a
-*.wma
-
-# Imágenes pesadas
-*.tiff
-*.tif
-*.bmp
-*.psd
-*.ai
-*.eps
-
-# ===== 📄 ARCHIVOS DE TRANSCRIPCIÓN Y SUBTÍTULOS =====
-# Transcripciones generadas
-*.srt
-*.vtt
-*.ass
-*.ssa
-transcriptions/
-Subtitles/
-
-# ===== 📊 OUTPUT FILES Y DATOS GENERADOS =====
-# JSONs de output (mantener solo los de configuración)
-*_output.json
-*_result.json
-*_generated.json
-*_metadata.json
-generated_*.json
-segmented_prompts.json
-synchronized_*.json
-scripts_with_video_prompts.json
-
-# Carpetas de output del pipeline anterior (por si existen)
-Video_generated/
-Video_without_silences/
-synchronized/
-synchronized_part2/
-Record/
-Results/
-Material/
-
-# ===== 🐍 PYTHON =====
-# Byte-compiled / optimized / DLL files
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-
-# Distribution / packaging
-.Python
-build/
-develop-eggs/
-dist/
-downloads/
-eggs/
-.eggs/
-lib/
-lib64/
-parts/
-sdist/
-var/
-wheels/
-pip-wheel-metadata/
-share/python-wheels/
-*.egg-info/
-.installed.cfg
-*.egg
-MANIFEST
-
-# PyInstaller
-*.manifest
-*.spec
-
-# Installer logs
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Unit test / coverage reports
-htmlcov/
-.tox/
-.nox/
-.coverage
-.coverage.*
-.cache
-nosetests.xml
-coverage.xml
-*.cover
-*.py,cover
-.hypothesis/
-.pytest_cache/
-
-# Virtual environments
-venv/
-env/
-ENV/
-env.bak/
-venv.bak/
-.venv/
-video_env/
-pipeline_env/
-
-# ===== 🤖 AI/ML MODELS =====
-# Modelos descargados de Whisper
-*.pt
-*.pth
-*.bin
-*.safetensors
-models/
-whisper_models/
-huggingface_models/
-
-# Cache de modelos
-.cache/
-*.cache
-model_cache/
-
-# ===== 📝 LOGS Y TEMPORALES =====
-# Logs
+# ===== LOGS =====
 *.log
 logs/
-*.out
-*.err
-debug.txt
-error.log
-pipeline.log
+python-pipeline/*.log
+remotion_short_video/*.log
 
-# Archivos temporales
-temp/
-tmp/
+# ===== ARCHIVOS TEMPORALES DEL PIPELINE =====
+# Archivos temporales generados durante procesamiento
+video_no_silence.mp4
+clean_subtitles.srt
+transcription.srt
+video_with_silence.mp4
+temp-audio.m4a
+*.tmp.mp4
+*.tmp.srt
+
+# ===== TEMPORARY FILES =====
 *.tmp
 *.temp
-*.swp
-*.swo
-*~
+.cache/
+.parcel-cache/
 
-# ===== 💻 SISTEMAS OPERATIVOS =====
-# Windows
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
-*.cab
-*.msi
-*.msix
-*.msm
-*.msp
-*.lnk
+# ===== CHECKPOINTS Y CACHE =====
+# Checkpoints del pipeline (mantener estructura, ignorar contenido grande)
+shared-assets/VideoProduction/00_checkpoints/*.tmp
+shared-assets/VideoProduction/00_checkpoints/*.cache
 
-# macOS
-.DS_Store
-.AppleDouble
-.LSOverride
-Icon
-._*
-.DocumentRevisions-V100
-.fseventsd
-.Spotlight-V100
-.TemporaryItems
-.Trashes
-.VolumeIcon.icns
-.com.apple.timemachine.donotpresent
+# ===== OUTPUTS DE STOCK FOOTAGE =====
+# Carpetas de videos descargados (pueden ser muy grandes)
+shared-assets/VideoProduction/05_StockFootage/02_downloaded_videos/**/*.mp4
+shared-assets/VideoProduction/05_StockFootage/02_downloaded_videos/**/*.mov
+shared-assets/VideoProduction/05_StockFootage/02_downloaded_videos/**/*.avi
 
-# Linux
-*~
-.fuse_hidden*
-.directory
-.Trash-*
-.nfs*
-
-# ===== 🛠️ IDEs Y EDITORES =====
-# VS Code
-.vscode/
-*.code-workspace
-
-# PyCharm
-.idea/
-*.iws
-*.iml
-*.ipr
-
-# Jupyter Notebook
-.ipynb_checkpoints
-*.ipynb
-
-# Spyder
-.spyderproject
-.spyproject
-
-# Vim
-*.swp
-*.swo
-
-# Emacs
-*~
-\#*\#
-.\#*
-
-# Sublime Text
-*.sublime-workspace
-*.sublime-project
-
-# ===== 🌐 WEB Y NODE (si usas alguna herramienta web) =====
-node_modules/
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-.npm
-.node_repl_history
-
-# ===== 📦 DEPENDENCIAS Y INSTALACIONES =====
-# pip
-pip-log.txt
-pip-delete-this-directory.txt
-
-# Conda
-.conda/
-
-# ===== 🔍 HERRAMIENTAS DE DESARROLLO =====
-# mypy
-.mypy_cache/
-.dmypy.json
-dmypy.json
-
-# Pyre type checker
-.pyre/
-
-# pytype static type analyzer
-.pytype/
-
-# profiling data
-.prof
-
-# ===== 📋 ARCHIVOS DE PROYECTO ESPECÍFICOS =====
-# Scripts HTML del narrador (pueden ser regenerados)
-scripts/*.html
-narrator_*.html
-
-# Archivos de backup
+# ===== BACKUP FILES =====
 *.bak
 *.backup
-backup/
+*.old
 
-# Archivos de test pesados
-test_videos/
-sample_videos/
-test_data/
+# ===== COMPRESSION =====
+*.zip
+*.tar.gz
+*.rar
+*.7z
 
-# ===== ✅ EXCEPCIONES - ARCHIVOS A MANTENER =====
-# Mantener archivos de configuración base
-!config.py
-!requirements.txt
-!README.md
+# ===== MANTENER EN EL REPO (NO IGNORAR) =====
+# Estos archivos SÍ deben estar en git:
+# - *.json (configuraciones, metadatos, prompts)
+# - *.srt (subtítulos pequeños)
+# - *.html (scripts del narrador)
+# - *.py (código fuente)
+# - *.ts, *.tsx (código Remotion)
+# - package.json, requirements.txt
+# - README.md, documentación
 
-# Mantener estructura de carpetas (si es necesario)
-# !VideoProduction/**/.gitkeep
-
-# Mantener archivos de configuración JSON pequeños
-!**/category_prompts.json
-!**/topics.json
-!1_generate_content_scripts/json/**/*.json
-
-# ===== 📝 DOCUMENTACIÓN =====
-# Mantener documentación
-!*.md
-!docs/
-!LICENSE
-!CHANGELOG.md
-
-# ========================================
-# 🎯 RESUMEN DE ARCHIVOS EXCLUIDOS:
-# ========================================
-# ✅ Videos/audio pesados (*.mp4, *.wav, etc.)
-# ✅ Toda la carpeta VideoProduction/ con outputs
-# ✅ API keys y configuración sensible
-# ✅ Modelos de AI descargados
-# ✅ Cache de Python y virtual environments
-# ✅ Logs y archivos temporales
-# ✅ Archivos del sistema operativo
-# ✅ Configuraciones de IDEs
-# ✅ Archivos generados por el pipeline
-# ========================================
+# ===== NOTAS =====
+# Este .gitignore está optimizado para:
+# 1. Mantener código fuente y configuraciones
+# 2. Ignorar archivos grandes de video/audio
+# 3. Ignorar dependencias (node_modules, venv)
+# 4. Ignorar archivos temporales del pipeline
+# 5. Mantener estructura pero ignorar contenido grande

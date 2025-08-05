@@ -1,0 +1,137 @@
+{
+  "defaultConfig": {
+    "fps": 30,
+    "width": 1080,
+    "height": 1920,
+    "subtitlesConfig": {
+      "position": "center",
+      "fontSize": 64,
+      "fontFamily": "Poppins",
+      "color": "white",
+      "strokeWidth": 22,
+      "strokeColor": "black"
+    }
+  },
+  "examples": [
+    {
+      "id": "tutorial-modern",
+      "title": "Modern Tutorial Style",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "center",
+      "subtitlesConfig": {
+        "position": "bottom",
+        "fontSize": 56,
+        "fontFamily": "Figtree",
+        "color": "#ffffff",
+        "strokeWidth": 18,
+        "strokeColor": "#000000"
+      }
+    },
+    {
+      "id": "podcast-highlight",
+      "title": "Podcast Highlight with Speaker",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "circle",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 58,
+        "fontFamily": "Nunito",
+        "color": "#f8f9fa",
+        "strokeWidth": 20,
+        "strokeColor": "#1a1a1a"
+      },
+      "layoutSpecific": {
+        "circle": {
+          "size": 400,
+          "position": { "top": 60, "left": 50 },
+          "borderWidth": 6,
+          "borderColor": "#3b82f6"
+        }
+      }
+    },
+    {
+      "id": "gaming-commentary",
+      "title": "Gaming Commentary Style",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "bottom",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 52,
+        "fontFamily": "Poppins",
+        "color": "#00ff88",
+        "strokeWidth": 16,
+        "strokeColor": "#000000"
+      },
+      "layoutSpecific": {
+        "bottom": {
+          "videoHeight": "65%",
+          "subtitlesTop": "70%",
+          "backgroundColor": "#0a0a0a"
+        }
+      }
+    },
+    {
+      "id": "educational-clean",
+      "title": "Clean Educational Content",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "center",
+      "subtitlesConfig": {
+        "position": "bottom",
+        "fontSize": 48,
+        "fontFamily": "Figtree",
+        "color": "#ffffff",
+        "strokeWidth": 14,
+        "strokeColor": "#2563eb"
+      }
+    },
+    {
+      "id": "reaction-video",
+      "title": "Reaction Video with Small Player",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "circle",
+      "subtitlesConfig": {
+        "position": "bottom",
+        "fontSize": 50,
+        "fontFamily": "Poppins",
+        "color": "#fbbf24",
+        "strokeWidth": 18,
+        "strokeColor": "#1f2937"
+      },
+      "layoutSpecific": {
+        "circle": {
+          "size": 300,
+          "position": { "top": 40, "left": 750 },
+          "borderWidth": 5,
+          "borderColor": "#ef4444"
+        }
+      }
+    },
+    {
+      "id": "minimalist-quote",
+      "title": "Minimalist Quote Style",
+      "videoFile": "video.mp4",
+      "subtitlesFile": "subtitles.srt",
+      "layout": "bottom",
+      "subtitlesConfig": {
+        "position": "center",
+        "fontSize": 72,
+        "fontFamily": "Nunito",
+        "color": "#f1f5f9",
+        "strokeWidth": 24,
+        "strokeColor": "#334155"
+      },
+      "layoutSpecific": {
+        "bottom": {
+          "videoHeight": "40%",
+          "subtitlesTop": "50%",
+          "backgroundColor": "#1e293b"
+        }
+      }
+    }
+  ]
+}

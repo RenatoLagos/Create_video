@@ -1,0 +1,17 @@
+{
+  "defaultConfig": {
+    "fps": 30,
+    "width": 1080,
+    "height": 1920
+  },
+  "videos": [
+    {
+      "id": "sequenced-video",
+      "title": "Sequenced Video - Generic",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
+      "subtitlesFile": "video/03_VideoProcessing/03_subtitles/clean_subtitles.srt",
+      "segmentedPromptsFile": "video/04_VideoGeneration/01_segmented_prompts/segmented_prompts_id.json",
+      "debugMode": true
+    }
+  ]
+}

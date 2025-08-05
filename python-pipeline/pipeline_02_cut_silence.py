@@ -2,16 +2,173 @@
 """
 Script para remover silencios de video basándose en transcripción SRT
 Detecta gaps entre subtítulos y remueve esos segmentos del video
+Incluye detección y manejo de rotación de video
 """
 
 import os
 import sys
 import re
 import glob
+import subprocess
+import json
 from datetime import datetime, timedelta
 from pathlib import Path
 from moviepy.editor import VideoFileClip, concatenate_videoclips
 from config import SilenceCutConfig, validate_all_paths, print_configuration_summary
+
+def get_video_rotation(video_path):
+    """
+    Detecta la rotación del video usando ffprobe
+    Busca rotación tanto en tags como en side_data (Display Matrix)
+    """
+    try:
+        # Usar ffprobe para obtener metadata completo incluyendo side_data
+        cmd = [
+            'ffprobe', '-v', 'quiet', '-print_format', 'json',
+            '-show_streams', str(video_path)
+        ]
+        
+        result = subprocess.run(cmd, capture_output=True, text=True, timeout=10)
+        
+        if result.returncode == 0:
+            data = json.loads(result.stdout)
+            streams = data.get('streams', [])
+            
+            # Buscar el stream de video
+            video_stream = None
+            for stream in streams:
+                if stream.get('codec_type') == 'video':
+                    video_stream = stream
+                    break
+            
+            if video_stream:
+                rotation = 0
+                width = video_stream.get('width', 0)
+                height = video_stream.get('height', 0)
+                
+                # Método 1: Buscar rotación en tags
+                if 'tags' in video_stream and 'rotate' in video_stream['tags']:
+                    rotation = int(video_stream['tags']['rotate'])
+                    print(f">> Rotación encontrada en tags: {rotation}°")
+                
+                # Método 2: Buscar rotación en side_data_list (Display Matrix)
+                elif 'side_data_list' in video_stream:
+                    for side_data in video_stream['side_data_list']:
+                        if side_data.get('side_data_type') == 'Display Matrix':
+                            if 'rotation' in side_data:
+                                rotation = int(float(side_data['rotation']))
+                                print(f">> Rotación encontrada en Display Matrix: {rotation}°")
+                                break
+                
+                # Normalizar rotación (convertir valores negativos)
+                if rotation < 0:
+                    rotation = 360 + rotation
+                
+                return {
+                    'rotation': rotation,
+                    'original_width': width,
+                    'original_height': height,
+                    'needs_rotation': rotation in [90, 270]
+                }
+    
+    except (subprocess.TimeoutExpired, subprocess.CalledProcessError, json.JSONDecodeError, FileNotFoundError) as e:
+        print(f">> Error con ffprobe: {e}")
+        # Si ffprobe falla, usar método alternativo con MoviePy
+        try:
+            video = VideoFileClip(str(video_path))
+            rotation = getattr(video.reader, 'rotation', 0) if hasattr(video.reader, 'rotation') else 0
+            width, height = video.size
+            video.close()
+            
+            return {
+                'rotation': rotation,
+                'original_width': width,
+                'original_height': height,
+                'needs_rotation': rotation in [90, 270]
+            }
+        except Exception as e2:
+            print(f">> Error con MoviePy: {e2}")
+            pass
+    
+    # Fallback: no rotation detected
+    return {
+        'rotation': 0,
+        'original_width': 0,
+        'original_height': 0,
+        'needs_rotation': False
+    }
+
+def apply_rotation_if_needed(video_clip, rotation_info):
+    """
+    Corrige la orientación del video basándose en su metadata de rotación
+    Para videos con rotación -90°, transponemos las dimensiones en lugar de rotar
+    """
+    if not rotation_info['needs_rotation']:
+        return video_clip
+    
+    rotation = rotation_info['rotation']
+    
+    if rotation == 270:  # Video tiene -90° en Display Matrix
+        # En lugar de rotar, transponemos las dimensiones manteniendo aspect ratio correcto
+        print(">> Transponiendo dimensiones de 1280x720 a 720x1280 (sin rotación)")
+        print(">> Esto corrige el metadata de rotación -90° cambiando las dimensiones físicas")
+        
+        # Redimensionar a las dimensiones correctas (720x1280) manteniendo contenido sin rotar
+        corrected_video = video_clip.resize((720, 1280))
+        return corrected_video
+        
+    elif rotation == 90:
+        # Video está rotado 90°, transponemos y ajustamos
+        print(">> Transponiendo dimensiones para corrección 90°")
+        corrected_video = video_clip.resize((720, 1280))
+        return corrected_video
+        
+    elif rotation == 180:
+        # Video está rotado 180°, aplicamos rotación
+        print(">> Aplicando corrección: 180°")
+        return video_clip.rotate(180)
+    
+    return video_clip
+
+def test_rotations(video_path):
+    """
+    Función de prueba para probar diferentes rotaciones
+    """
+    print(">> MODO DE PRUEBA DE ROTACIONES")
+    print(">> Generando muestras con diferentes rotaciones...")
+    
+    video = VideoFileClip(video_path)
+    
+    # Crear clips de prueba de 5 segundos
+    test_clip = video.subclip(0, min(5, video.duration))
+    
+    rotations_to_test = [0, 90, -90, 180, -180, 270]
+    
+    for i, rotation in enumerate(rotations_to_test):
+        output_file = f"VideoProduction/03_VideoProcessing/02_silence_removal/test_rotation_{rotation}.mp4"
+        
+        if rotation == 0:
+            final_clip = test_clip
+        else:
+            final_clip = test_clip.rotate(rotation)
+        
+        print(f">> Generando test_{rotation}.mp4 con rotación {rotation}°")
+        
+        final_clip.write_videofile(
+            output_file,
+            codec='libx264',
+            audio_codec='aac',
+            verbose=False,
+            ffmpeg_params=['-crf', '23', '-preset', 'fast']
+        )
+        
+        final_clip.close()
+    
+    video.close()
+    test_clip.close()
+    
+    print(">> Archivos de prueba generados. Revisa cuál tiene la orientación correcta.")
+    return rotations_to_test
 
 def find_video_file_flexible():
     """
@@ -142,23 +299,55 @@ def detect_speech_segments(srt_segments):
 def cut_video_segments(video_path, speech_segments, output_path):
     """
     Corta el video manteniendo solo los segmentos con habla
+    Detecta y maneja rotación automáticamente
     """
     if SilenceCutConfig.VERBOSE:
         print(">> Cargando video original...")
     
-    # Cargar video
+    # PASO 1: Detectar rotación del video
+    rotation_info = get_video_rotation(video_path)
+    
+    if SilenceCutConfig.VERBOSE:
+        print(f">> Rotación detectada: {rotation_info['rotation']}°")
+        print(f">> Dimensiones técnicas: {rotation_info['original_width']}x{rotation_info['original_height']}")
+        print(f">> Necesita rotación: {'Sí' if rotation_info['needs_rotation'] else 'No'}")
+    
+    # PASO 2: Cargar video
     video = VideoFileClip(video_path)
     original_duration = video.duration
     
+    # PASO 3: Aplicar rotación si es necesario
+    if rotation_info['needs_rotation']:
+        if SilenceCutConfig.VERBOSE:
+            print(f">> Aplicando rotación de {rotation_info['rotation']}°...")
+        video = apply_rotation_if_needed(video, rotation_info)
+    
+    # PASO 4: Obtener resolución final (después de rotación)
+    final_size = video.size  # (width, height)
+    final_fps = video.fps
+    final_aspect_ratio = final_size[0] / final_size[1]
+    
     if SilenceCutConfig.VERBOSE:
         print(f">> Duración original: {original_duration:.2f} segundos")
+        print(f">> Resolución final: {final_size[0]}x{final_size[1]} (W x H)")
+        print(f">> Aspect ratio final: {final_aspect_ratio:.3f}")
+        print(f">> FPS: {final_fps:.2f}")
+        
+        # Detectar orientación final
+        if final_aspect_ratio > 1:
+            orientation = "landscape (horizontal)"
+        elif final_aspect_ratio < 1:
+            orientation = "portrait (vertical)"
+        else:
+            orientation = "square (cuadrado)"
+        print(f">> Orientación final: {orientation}")
     
     # Crear clips para cada segmento de habla
     clips = []
     
     for i, segment in enumerate(speech_segments):
         start_time = segment['start']
-        end_time = min(segment['end'], original_duration)  # No exceder duración del video
+        end_time = min(segment['end'], original_duration)
         
         if start_time >= original_duration:
             if SilenceCutConfig.VERBOSE:
@@ -173,9 +362,9 @@ def cut_video_segments(video_path, speech_segments, output_path):
         if SilenceCutConfig.VERBOSE:
             print(f">> Cortando segmento {i+1}: {start_time:.2f}s - {end_time:.2f}s ({end_time-start_time:.2f}s)")
         
-        # Crear subclip
         try:
             clip = video.subclip(start_time, end_time)
+            # El clip heredará automáticamente la rotación aplicada
             clips.append(clip)
         except Exception as e:
             print(f"[ERROR] Error cortando segmento {i+1}: {e}")
@@ -187,36 +376,18 @@ def cut_video_segments(video_path, speech_segments, output_path):
     if SilenceCutConfig.VERBOSE:
         print(f">> Concatenando {len(clips)} clips...")
     
-    # Obtener resolución original del video
-    original_size = video.size  # (width, height)
-    original_fps = video.fps
+    # Concatenar clips
+    final_video = concatenate_videoclips(clips, method="compose")
     
-    if SilenceCutConfig.VERBOSE:
-        print(f">> Resolución original: {original_size[0]}x{original_size[1]} @ {original_fps:.2f} fps")
-    
-    # Asegurar que todos los clips tengan la misma resolución
-    clips_resized = []
-    for i, clip in enumerate(clips):
-        if clip.size != original_size:
-            if SilenceCutConfig.VERBOSE:
-                print(f">> Redimensionando clip {i+1} de {clip.size} a {original_size}")
-            clip_resized = clip.resize(original_size)
-            clips_resized.append(clip_resized)
-        else:
-            clips_resized.append(clip)
-    
-    # Concatenar clips con la misma resolución
-    final_video = concatenate_videoclips(clips_resized, method="compose")
-    
-    # Crear directorio de salida si no existe
+    # Crear directorio de salida
     os.makedirs(os.path.dirname(output_path), exist_ok=True)
     
     if SilenceCutConfig.VERBOSE:
-        print(f">> Guardando video sin silencios...")
+        final_width, final_height = final_video.size
+        print(f">> Guardando video con resolución: {final_width}x{final_height}")
         print(f">> Ruta de salida: {output_path}")
-        print(f">> Resolución final: {final_video.size[0]}x{final_video.size[1]} @ {final_video.fps:.2f} fps")
     
-    # Guardar video final preservando resolución y aspect ratio
+    # Guardar video final
     final_video.write_videofile(
         output_path,
         codec=SilenceCutConfig.VIDEO_CODEC,
@@ -226,9 +397,7 @@ def cut_video_segments(video_path, speech_segments, output_path):
         verbose=SilenceCutConfig.MOVIEPY_VERBOSE,
         ffmpeg_params=[
             '-crf', str(SilenceCutConfig.CRF_VALUE), 
-            '-preset', SilenceCutConfig.PRESET,
-            '-vf', f'scale={original_size[0]}:{original_size[1]}:flags=lanczos',  # Forzar resolución original
-            '-aspect', f'{original_size[0]}:{original_size[1]}'  # Preservar aspect ratio
+            '-preset', SilenceCutConfig.PRESET
         ]
     )
     
@@ -237,10 +406,8 @@ def cut_video_segments(video_path, speech_segments, output_path):
     final_video.close()
     for clip in clips:
         clip.close()
-    for clip in clips_resized:
-        if clip not in clips:  # Solo cerrar clips que fueron redimensionados
-            clip.close()
     
+    # Calcular estadísticas
     final_duration = sum(seg['end'] - seg['start'] for seg in speech_segments if seg['start'] < original_duration)
     time_saved = original_duration - final_duration
     percentage_saved = (time_saved / original_duration) * 100 if original_duration > 0 else 0
@@ -249,7 +416,9 @@ def cut_video_segments(video_path, speech_segments, output_path):
         'original_duration': original_duration,
         'final_duration': final_duration,
         'time_saved': time_saved,
-        'percentage_saved': percentage_saved
+        'percentage_saved': percentage_saved,
+        'rotation_applied': rotation_info['rotation'] if rotation_info['needs_rotation'] else 0,
+        'final_resolution': final_video.size
     }
 
 def main():
@@ -311,6 +480,9 @@ def main():
         print(f">> Duración original: {result['original_duration']:.2f}s")
         print(f">> Duración final: {result['final_duration']:.2f}s")
         print(f">> Tiempo ahorrado: {result['time_saved']:.2f}s ({result['percentage_saved']:.1f}%)")
+        if result['rotation_applied'] != 0:
+            print(f">> Rotación aplicada: {result['rotation_applied']}°")
+        print(f">> Resolución final: {result['final_resolution']}")
         
     except Exception as e:
         print(f"[ERROR] Error durante el procesamiento: {str(e)}")

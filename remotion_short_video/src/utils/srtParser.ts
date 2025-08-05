@@ -7,20 +7,53 @@ export interface SubtitleEntry {
 
 export function parseSRT(srtContent: string): SubtitleEntry[] {
   const entries: SubtitleEntry[] = [];
-  const blocks = srtContent.trim().split('\n\n');
+  const lines = srtContent.trim().split('\n');
+  
+  console.log(`🔍 SRT Parser Debug (NEW):`);
+  console.log(`📄 Raw content length: ${srtContent.length}`);
+  console.log(`📄 Total lines: ${lines.length}`);
 
-  for (const block of blocks) {
-    const lines = block.trim().split('\n');
-    if (lines.length < 3) continue;
+  let i = 0;
+  while (i < lines.length) {
+    // Skip empty lines
+    if (!lines[i] || lines[i].trim() === '') {
+      i++;
+      continue;
+    }
 
-    const id = parseInt(lines[0]);
-    const timeMatch = lines[1].match(/(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+    // Parse subtitle ID
+    const id = parseInt(lines[i]);
+    if (isNaN(id)) {
+      console.log(`⚠️ Skipping line ${i + 1}: Invalid ID "${lines[i]}"`);
+      i++;
+      continue;
+    }
+
+    // Parse timestamp line
+    i++;
+    if (i >= lines.length) break;
     
-    if (!timeMatch) continue;
+    const timeMatch = lines[i].match(/(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})/);
+    if (!timeMatch) {
+      console.log(`⚠️ Skipping subtitle ${id}: Invalid time format "${lines[i]}"`);
+      i++;
+      continue;
+    }
 
     const startTime = parseTime(timeMatch[1], timeMatch[2], timeMatch[3], timeMatch[4]);
     const endTime = parseTime(timeMatch[5], timeMatch[6], timeMatch[7], timeMatch[8]);
-    const text = lines.slice(2).join('\n');
+
+    // Parse subtitle text (can be multiple lines)
+    i++;
+    const textLines: string[] = [];
+    while (i < lines.length && lines[i].trim() !== '' && !lines[i].match(/^\d+$/)) {
+      textLines.push(lines[i]);
+      i++;
+    }
+
+    const text = textLines.join(' ').trim();
+    
+    console.log(`✅ Subtitle ${id} parsed: ${startTime}s - ${endTime}s "${text.substring(0, 30)}..."`);
 
     entries.push({
       id,
@@ -30,6 +63,7 @@ export function parseSRT(srtContent: string): SubtitleEntry[] {
     });
   }
 
+  console.log(`🎯 Final result: ${entries.length} subtitle entries parsed`);
   return entries;
 }
 

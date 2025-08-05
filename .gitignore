@@ -12,6 +12,10 @@ remotion_short_video/package.json
 remotion_short_video/postcss.config.mjs
 remotion_short_video/remotion.config.ts
 remotion_short_video/tsconfig.json
+remotion_short_video/src/config/video-examples.json
+remotion_short_video/src/config/videos.json
+remotion_short_video/src/config/karaoke-config.json
+remotion_short_video/src/config/sequenced-videos.json
 
 # ===== PYTHON PIPELINE =====
 # Virtual environments

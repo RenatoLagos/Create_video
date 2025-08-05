@@ -56,6 +56,12 @@ export const SequencedVideo: React.FC<SequencedVideoProps> = ({
         setSubtitles(subtitlesData);
 
         console.log(`✅ Loaded ${timelineData.length} timeline segments and ${subtitlesData.length} subtitle entries`);
+        console.log('📝 First few subtitles:', subtitlesData.slice(0, 3).map(s => ({
+          id: s.id,
+          startTime: s.startTime,
+          endTime: s.endTime,
+          text: s.text.substring(0, 50) + '...'
+        })));
         
       } catch (err) {
         console.error('Failed to load data:', err);
@@ -74,6 +80,20 @@ export const SequencedVideo: React.FC<SequencedVideoProps> = ({
   
   // Get current subtitle
   const currentSubtitle = getCurrentSubtitle(subtitles, currentTime);
+  
+  // Debug subtitle timing (only log every 30 frames to avoid spam)
+  useEffect(() => {
+    if (debugMode && frame % 30 === 0 && subtitles.length > 0) {
+      const activeSubtitle = subtitles.find(s => currentTime >= s.startTime && currentTime <= s.endTime);
+      console.log(`⏰ Frame ${frame}, Time: ${currentTime.toFixed(2)}s`);
+      console.log(`🎯 Active subtitle:`, activeSubtitle ? {
+        id: activeSubtitle.id,
+        startTime: activeSubtitle.startTime,
+        endTime: activeSubtitle.endTime,
+        text: activeSubtitle.text.substring(0, 30) + '...'
+      } : 'None');
+    }
+  }, [frame, currentTime, subtitles, debugMode]);
 
   // Debug info
   const debugInfo = useMemo(() => {
@@ -88,7 +108,17 @@ export const SequencedVideo: React.FC<SequencedVideoProps> = ({
         startTime: activeSegment.startTime,
         endTime: activeSegment.endTime
       } : null,
-      currentSubtitle: currentSubtitle || 'No subtitle'
+      currentSubtitle: currentSubtitle || 'No subtitle',
+      subtitlesCount: subtitles.length,
+      nearestSubtitles: subtitles.filter(s => 
+        Math.abs(s.startTime - currentTime) < 5 || 
+        Math.abs(s.endTime - currentTime) < 5
+      ).map(s => ({
+        id: s.id,
+        start: s.startTime.toFixed(1),
+        end: s.endTime.toFixed(1),
+        text: s.text.substring(0, 20) + '...'
+      }))
     };
   }, [currentTime, currentLayout, activeSegment, currentSubtitle, debugMode]);
 
@@ -285,6 +315,13 @@ export const SequencedVideo: React.FC<SequencedVideoProps> = ({
           <div>📝 Suggestion: {activeSegment?.editingSuggestion || 'None'}</div>
           <div>📖 Phrase: #{activeSegment?.phraseNumber || 'N/A'}</div>
           <div>💬 Subtitle: {debugInfo.currentSubtitle}</div>
+          <div>📊 Total Subtitles: {debugInfo.subtitlesCount}</div>
+          <div>🎯 Nearby Subtitles:</div>
+          {debugInfo.nearestSubtitles.slice(0, 3).map((sub: any, i: number) => (
+            <div key={i} style={{ fontSize: '10px', marginLeft: '10px' }}>
+              #{sub.id}: {sub.start}s-{sub.end}s "{sub.text}"
+            </div>
+          ))}
         </div>
       )}
     </div>

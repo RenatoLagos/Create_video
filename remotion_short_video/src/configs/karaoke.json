@@ -1,0 +1,68 @@
+{
+  "id": "karaoke",
+  "name": "Karaoke Style",
+  "description": "Estilo karaoke similar a SubMachine con animaciones slide & fade",
+  "typography": {
+    "fontFamily": "Poppins",
+    "fontWeight": 900,
+    "fontSize": 64,
+    "letterSpacing": "1px",
+    "lineHeight": 1.2
+  },
+  "colors": {
+    "primary": "#ffffff",
+    "activeWord": "#ffff00",
+    "unspokenWord": "#888888",
+    "stroke": "#000000"
+  },
+  "stroke": {
+    "width": 22,
+    "enabled": true
+  },
+  "wordBackground": {
+    "enabled": true,
+    "color": "rgba(0, 0, 0, 0.7)",
+    "opacity": 0.8,
+    "borderRadius": 8,
+    "padding": {
+      "horizontal": 12,
+      "vertical": 6
+    }
+  },
+  "spacing": {
+    "lineSpacing": 1.4,
+    "wordSpacing": "0.2em"
+  },
+  "animations": {
+    "style": "slide-fade",
+    "duration": 0.3,
+    "easing": "ease-out",
+    "slideDistance": 20,
+    "fadeInDelay": 0.1,
+    "fadeOutDelay": 0.1,
+    "scaleEffect": {
+      "enabled": true,
+      "scale": 1.1,
+      "duration": 0.2
+    }
+  },
+  "chunking": {
+    "maxChars": 7,
+    "minDuration": 1.2,
+    "fps": 30,
+    "gapFrames": 0,
+    "wordBreakPriority": [" ", ",", ".", ";", ":", "!", "?"]
+  },
+  "positioning": {
+    "position": "center",
+    "verticalAlign": "center",
+    "horizontalAlign": "center",
+    "maxWidth": "90%",
+    "margin": {
+      "top": "5%",
+      "bottom": "5%",
+      "left": "5%",
+      "right": "5%"
+    }
+  }
+}

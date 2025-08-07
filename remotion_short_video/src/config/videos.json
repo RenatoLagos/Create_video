@@ -16,7 +16,7 @@
     {
       "id": "spanish-lesson-center",
       "title": "Spanish Lesson - Center Layout",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "audioFile": "audio/video.mp3",
       "subtitlesFile": "subtitles.srt",
       "layout": "center",
@@ -29,7 +29,7 @@
     {
       "id": "spanish-lesson-bottom",
       "title": "Spanish Lesson - Bottom Layout",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "audioFile": "audio/video.mp3",
       "subtitlesFile": "subtitles.srt",
       "layout": "bottom",
@@ -49,7 +49,7 @@
     {
       "id": "spanish-lesson-circle",
       "title": "Spanish Lesson - Circle Layout",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "audioFile": "audio/video.mp3",
       "subtitlesFile": "subtitles.srt",
       "layout": "circle",

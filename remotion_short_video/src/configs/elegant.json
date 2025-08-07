@@ -1,0 +1,68 @@
+{
+  "id": "elegant",
+  "name": "Elegant Style",
+  "description": "Estilo elegante con animaciones suaves y tipografía refinada",
+  "typography": {
+    "fontFamily": "Nunito",
+    "fontWeight": 600,
+    "fontSize": 56,
+    "letterSpacing": "2px",
+    "lineHeight": 1.5
+  },
+  "colors": {
+    "primary": "#f8f8f8",
+    "activeWord": "#ffd700",
+    "unspokenWord": "#aaaaaa",
+    "stroke": "#2c2c2c"
+  },
+  "stroke": {
+    "width": 3,
+    "enabled": true
+  },
+  "wordBackground": {
+    "enabled": true,
+    "color": "rgba(44, 44, 44, 0.85)",
+    "opacity": 0.9,
+    "borderRadius": 12,
+    "padding": {
+      "horizontal": 16,
+      "vertical": 8
+    }
+  },
+  "spacing": {
+    "lineSpacing": 1.6,
+    "wordSpacing": "0.3em"
+  },
+  "animations": {
+    "style": "scale-fade",
+    "duration": 0.4,
+    "easing": "ease-in-out",
+    "slideDistance": 0,
+    "fadeInDelay": 0.15,
+    "fadeOutDelay": 0.15,
+    "scaleEffect": {
+      "enabled": true,
+      "scale": 0.9,
+      "duration": 0.3
+    }
+  },
+  "chunking": {
+    "maxChars": 9,
+    "minDuration": 1.8,
+    "fps": 30,
+    "gapFrames": 3,
+    "wordBreakPriority": [" ", ",", ".", ";", ":", "!", "?"]
+  },
+  "positioning": {
+    "position": "center",
+    "verticalAlign": "center",
+    "horizontalAlign": "center",
+    "maxWidth": "85%",
+    "margin": {
+      "top": "10%",
+      "bottom": "10%",
+      "left": "7.5%",
+      "right": "7.5%"
+    }
+  }
+}

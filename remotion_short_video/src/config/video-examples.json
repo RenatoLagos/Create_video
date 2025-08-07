@@ -16,7 +16,7 @@
     {
       "id": "tutorial-modern",
       "title": "Modern Tutorial Style",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "center",
       "subtitlesConfig": {
@@ -31,7 +31,7 @@
     {
       "id": "podcast-highlight",
       "title": "Podcast Highlight with Speaker",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "circle",
       "subtitlesConfig": {
@@ -54,7 +54,7 @@
     {
       "id": "gaming-commentary",
       "title": "Gaming Commentary Style",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "bottom",
       "subtitlesConfig": {
@@ -76,7 +76,7 @@
     {
       "id": "educational-clean",
       "title": "Clean Educational Content",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "center",
       "subtitlesConfig": {
@@ -91,7 +91,7 @@
     {
       "id": "reaction-video",
       "title": "Reaction Video with Small Player",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "circle",
       "subtitlesConfig": {
@@ -114,7 +114,7 @@
     {
       "id": "minimalist-quote",
       "title": "Minimalist Quote Style",
-      "videoFile": "video.mp4",
+      "videoFile": "video/03_VideoProcessing/02_silence_removal/video_no_silence.mp4",
       "subtitlesFile": "subtitles.srt",
       "layout": "bottom",
       "subtitlesConfig": {
